@@ -2,7 +2,7 @@
 
 Static code analysis is a powerful technique for helping programmers identify
 bugs and vulnerabilities in their software. Without executing the program,
-static analysis unearths userful information by solely inspecting code in
+static analysis unearths useful information by solely inspecting code in
 structured representations, such as abstract syntax trees (ASTs). Traditional
 static analyzers typically follow two main approaches. One approach is to
 exercise rule-based pattern matching against ASTs, as in [Semgrep][semgrep].
