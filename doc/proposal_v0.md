@@ -1,26 +1,27 @@
 # VulWitch: Machine Learning Based Static Code Analyzer
 
 Static code analysis is a powerful technique to help programmers discover bugs
-and vulnerabilities in their code. Without executing code, static analysis
-endeavors to unearth information of interest by only inspecting code, which is
+and vulnerabilities in their code.static analysis occurs without executing the 
+code in order to unearth information of interest by only inspecting code, which is
 usually represented in a structured form, e.g., abstract syntax tree (AST).
 Traditionally, a static analyzer either searches code patterns by matching
 handwritten rules against ASTs, such as [Semgrep][semgrep], or exercises more
-compilcated control and data flow analysis like Meta's [Infer][meta infer] does.
+compilcated such as control flow/data analysis like Meta's [Infer][meta infer].
 Given the nature of pattern matching, we believe that artificial intelligence
-(AI) fits well into the realm of static code analysis, and propose VulWitch, a
+(AI) fits well into the realm of static code analysis, hench VulWitch, a
 machine-learning-based code analyzer. We believe that machine learning methods
 could ease implementation and iterative improvement of an analyzer by
 automatically learning from a huge amount of existing and future bugs and
 vulnerabilities. Moreover, we do not anticipate that AI-powered code analyzers
-will entirely replace traditional ones. They could work together to give more
-accurate results by cross validation of results of each other.
+will entirely replace traditional ones. We believe they could work together to 
+give more accurate results by cross validation results from each other.
 
 ## Design of VulWitch
 
 ### Use case diagram
 
 ![Use case diagram](/doc/img/VulWitch_Use_Cases.jpeg)
+You can view the above use case diagram at [Lucidcart](https://lucid.app/lucidchart/d8eb6231-b3fd-45bd-9ab9-d64b39817447/edit?viewport_loc=88%2C-239%2C1939%2C931%2C0_0&invitationId=inv_1ae287ae-0cdc-4c3c-ba2a-3939ef401224).
 
 | Use Case Name | View abstract syntax trees of a source code file |
 | ------------- | ------------------------------------------------ |
@@ -62,8 +63,6 @@ accurate results by cross validation of results of each other.
 | Scenario      | 1. VulWitch feeds a function AST into AI Model. <br> AI Model analyzes the AST and reports any detected vulnerabilities along with their categories.  |
 | Exceptions    | The abstract syntax tree is ill-formed. |
 
-You can view the above use case diagram at [Lucidcart](https://lucid.app/lucidchart/d8eb6231-b3fd-45bd-9ab9-d64b39817447/edit?viewport_loc=88%2C-239%2C1939%2C931%2C0_0&invitationId=inv_1ae287ae-0cdc-4c3c-ba2a-3939ef401224).
-
 ### Class diagram
 
 ![Class diagram](/doc/img/VulWitch_Class_Diagram.jpeg)
@@ -77,7 +76,7 @@ You can view the above class diagram at [Lucidcart](https://lucid.app/lucidchart
 1. Vulnerability detection performance
 
 - Detect common vulnerabilities such as injection attacks, buffer overflows, and
-insecure cryptographic practices.
+insecure cryptographic practices such as hardcoded secrets and API keys.
 
 - Map detected vulnerabilities to different categories according to security
 standards, e.g., OWASP Top 10, CERT secure coding guidelines, and CWE.
@@ -87,7 +86,7 @@ negative rates to ensure high availability for developers.
 
 2. Runtime performance
 
-- Be able to analyze a single source file fast.
+- Be able to analyze a single source file in constant time.
 
 - Be able to efficiently analyze projects of large codebases so that it does not
 slow the development process.
@@ -99,10 +98,13 @@ analysis.
 
 1. Vulnerability detection performance
 
-- Rate of false positives and false negatives when VulWitch is used to examine
-public vulnerability datasets.
+- Rate of false positives and false negatives to show inaccuracy of Vulwitch
+- based on training data test sets.
 
-- Precision, recall, and F-1 score of our AI model, which are used to evaluate
+-Display score for true positive and true negitive to see how many issues found
+by the model proved to be issued based on standards.
+
+- Display Precision, recall, and F-1 score of our AI model, in order to evaluate
 the accuracy of vulnerability detection of the model.
 
 - Accuracy of mapping vulnerabilities according to secure standards.
