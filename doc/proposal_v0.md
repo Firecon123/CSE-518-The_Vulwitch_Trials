@@ -99,9 +99,9 @@ analysis.
 1. Vulnerability detection performance
 
 - Rate of false positives and false negatives to show inaccuracy of Vulwitch
-- based on training data test sets.
+based on training data test sets.
 
--Display score for true positive and true negitive to see how many issues found
+- Display score for true positive and true negitive to see how many issues found
 by the model proved to be issued based on standards.
 
 - Display Precision, recall, and F-1 score of our AI model, in order to evaluate
