@@ -5,15 +5,17 @@ cwd = os.getcwd()
 
 
 def get_all_subFolders(directory_path):
-    subfiles = []
+    subfiles = {}
     for root, dirs, files in os.walk(directory_path):
         for fileNames in files:
-                subfiles.append(fileNames)
+                full_path = os.path.join(root, fileNames)
+                subfiles[fileNames] = full_path
     return subfiles
 
 def main():
         filename = input("Put in file Name:")
         all_subFolders = get_all_subFolders(cwd)
+        print(all_subFolders)
         
         file_discovered_flag = False
         old_file_content = None
@@ -24,14 +26,14 @@ def main():
                         print("Loop terminated by user.")
                         break
                 
-                if filename in all_subFolders:
+                if filename in all_subFolders.keys():
                         #inform the user the file has been found only once using the flag
                         if not file_discovered_flag:
                                 print("File Found")
                                 file_discovered_flag = True
                         
                         #read the file the user wants to review
-                        with open(filename) as f:
+                        with open(all_subFolders[filename]) as f:
                                 file_content = f.read()
                                 #checks for any changes made to the file(This method forces user to save for changes to be recognized)
                                 if file_content != old_file_content:
