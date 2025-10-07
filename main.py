@@ -15,7 +15,7 @@ def get_all_subFolders(directory_path):
 def main():
         filename = input("Put in file Name:")
         all_subFolders = get_all_subFolders(cwd)
-        print(all_subFolders)
+        # print(all_subFolders)
         
         file_discovered_flag = False
         old_file_content = None
