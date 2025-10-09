@@ -1,0 +1,38 @@
+[project]
+name = "vulwitch"
+description = "VulWitch"
+readme = "README.md"
+version = "0.1.0"
+authors = [
+  { name = "Eldar Hamzic", email = "eldarham@buffalo.edu" },
+  { name = "Chase Allard", email = "chaseall@buffalo.edu" },
+  { name = "Hongbin Jin", email = "hongbinj@buffalo.edu" },
+  { name = "Jeffrey Yau", email = "jyau6@buffalo.edu" },
+]
+requires-python = ">= 3.10"
+dependencies = [
+  "tree-sitter == 0.25.1",
+  "tree-sitter-c == 0.24.1",
+  "tree-sitter-cpp == 0.23.4",
+  "tree-sitter-java == 0.23.5",
+  "tree-sitter-python == 0.25.0",
+  "tree-sitter-kotlin == 1.1.0",
+  "tree-sitter-scala == 0.24.0",
+  "tree-sitter-php == 0.24.1",
+  "tree-sitter-c-sharp == 0.23.1",
+  "tree-sitter-ruby == 0.23.1",
+  "tree-sitter-javascript == 0.25.0",
+  "tree-sitter-swift == 0.0.1",
+  "tree-sitter-go == 0.25.0",
+  "tree-sitter-fortran == 0.5.1",
+  "xdsl == 0.52.0",
+  "lit == 18.1.8",
+  "typing-extensions == 4.15.0",
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+]
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"

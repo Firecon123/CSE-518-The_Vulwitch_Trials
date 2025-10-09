@@ -6,3 +6,15 @@ Eldar Hamzic | eldarham@buffalo.edu | MS Computer Science & Engineering
 Chase Allard | chaseall@buffalo.edu | MS Computer Science & Engineering  
 Hongbin Jin  | hongbinj@buffalo.edu | MS Computer Science & Engineering  
 Jeffrey Yau  | jyau6@buffalo.edu    | MS Computer Science & Engineering
+
+## Play aroung with AST
+
+You can use [ast\_dump.py](/ast_main.py) to play around with abstract syntax
+trees (ASTs).
+
+```shell
+$ python3 -m venv --prompt ast .env
+$ source .env/bin/activate
+(ast) $ pip install ./
+(ast) $ python3 ast_dump.py --lang python ast_dump.py
+```
