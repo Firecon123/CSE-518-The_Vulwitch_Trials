@@ -1,0 +1,11 @@
+{
+  "overall_accuracy": 0.8527131782945736,
+  "cwe_accuracy": 0.875968992248062,
+  "line_accuracy": 0.0,
+  "safe_accuracy": 1.0,
+  "vulnerable_accuracy": 0.746031746031746,
+  "exact_matches": 110,
+  "total_samples": 129,
+  "total_safe": 66,
+  "total_vulnerable": 63
+}
