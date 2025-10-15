@@ -1,9 +1,10 @@
 import os
-import sys
 import time
 import json
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import numpy as np
+from sklearn.metrics import precision_recall_fscore_support
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 output_dir = os.path.join(root_dir, "Juliet_Dataset_Model", "output")
@@ -28,7 +29,7 @@ training_config = {
 model = None
 tokenizer = None
 
-def calculate_simple_confidence(prediction: str) -> float:
+def calculate_simple_confidence(prediction):
     if not prediction.strip():
         return 0.0
     if "CWE" in prediction and "-" in prediction:
@@ -87,7 +88,7 @@ def get_model_metrics():
     }
 
 
-def predict_vulnerability_detailed(code: str, language: str = "C") -> dict:
+def predict_vulnerability_detailed(code, language = "C"):
     start = time.time()
     input_text = f"<vuln_detect> <lang> {language}\n{code.strip()}"
     tokenize_start = time.time()
@@ -119,81 +120,6 @@ def predict_vulnerability_detailed(code: str, language: str = "C") -> dict:
         },
         "model_metrics": get_model_metrics()
     }
-
-
-def analyze_file(file_path):
-    print(f"\nAnalyzing file: {file_path}")
-    print("=" * 60)
-    try:
-        with open(file_path, encoding="utf-8", errors="ignore") as f:
-            code = f.read()
-        language = "C++" if file_path.endswith('.cpp') else "C"
-        print(f"Language: {language}")
-        print(f"\nCode:\n{'-'*40}")
-        print(code)
-        print(f"{'-'*40}\nAnalyzing...")
-        detailed_result = predict_vulnerability_detailed(code, language)
-        prediction = detailed_result["prediction"]
-        is_safe = prediction.startswith("SAFE") or "No vulnerability" in prediction
-        has_vuln = not is_safe and ("CWE" in prediction or "vulnerability" in prediction.lower())
-        result = {
-            "file": str(file_path),
-            "language": language,
-            "code": code,
-            "prediction": prediction,
-            "has_vulnerability": has_vuln,
-            "is_safe": is_safe,
-            "detailed_metrics": detailed_result
-        }
-        # JSON output removed - use analyze_c_code() for main functionality
-        print("\nVulnerability Analysis:")
-        print(f"  Prediction: {prediction}")
-        print(f"  Confidence: {detailed_result['confidence']:.3f}")
-        print(f"  Method: {detailed_result['method']}")
-        print("  Status:", "[WARNING] VULNERABILITY DETECTED" if has_vuln else "[SAFE] No vulnerability detected" if is_safe else "[UNKNOWN] Unable to determine status")
-        
-        # Always show detailed metrics
-        t = detailed_result["timing"]
-        print("\nPerformance Metrics:")
-        print(f"  Total: {t['total_time_ms']} ms")
-        print(f"  Tokenization: {t['tokenize_time_ms']} ms")
-        print(f"  Inference: {t['inference_time_ms']} ms")
-        if t["pattern_time_ms"] > 0:
-            print(f"  Pattern Matching: {t['pattern_time_ms']} ms")
-        
-        # Always show model metrics
-        model_metrics = detailed_result["model_metrics"]
-        print("\nModel Performance:")
-        print(f"  Overall Accuracy: {model_metrics['overall_accuracy']}")
-        print(f"  Safe Code Accuracy: {model_metrics['safe_accuracy']}")
-        print(f"  Vulnerable Code Accuracy: {model_metrics['vulnerable_accuracy']}")
-        print(f"  Precision: {model_metrics['precision']}")
-        print(f"  Recall: {model_metrics['recall']}")
-        print(f"  F1-Score: {model_metrics['f1_score']}")
-        print(f"  False Positives: {model_metrics['false_positives']}")
-        print(f"  False Negatives: {model_metrics['false_negatives']}")
-        print(f"  True Positives: {model_metrics['true_positives']}")
-        print(f"  True Negatives: {model_metrics['true_negatives']}")
-        print(f"  Model Version: {model_metrics['model_version']}")
-        
-        return result
-    except Exception as e:
-        print(f"Error analyzing file: {e}")
-        return {"error": str(e)}
-
-
-def analyze_directory(dir_path):
-    results = []
-    all_files = []
-    for root, dirs, files in os.walk(dir_path):
-        for file in files:
-            if file.endswith(('.c', '.cpp')):
-                all_files.append(os.path.join(root, file))
-    print(f"Found {len(all_files)} C/C++ files to analyze")
-    for f in all_files:
-        results.append(analyze_file(f))
-    return results
-
 
 def load_model(model_path=None):
     global model, tokenizer
@@ -267,12 +193,3 @@ def analyze_c_code(code_string: str, language: str = "C"):
     print(f"{'='*60}")
     
     return result
-
-
-def analyze_file_contents(code: str):
-    """Legacy function for backward compatibility"""
-    load_model()
-    inputs = tokenizer(code, return_tensors="pt", truncation=True, padding=True)
-    outputs = model.generate(**inputs, max_length=training_config["max_target_length"])
-    decoded_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return decoded_output
