@@ -1,8 +1,11 @@
 import keyboard
 import os
+import warnings
 import time
+warnings.filterwarnings("ignore")
 cwd = os.getcwd()
 
+from Juliet_Dataset_Model.analyze_code import analyze_c_code
 
 def get_all_subFolders(directory_path):
     subfiles = {}
@@ -11,6 +14,10 @@ def get_all_subFolders(directory_path):
                 full_path = os.path.join(root, fileNames)
                 subfiles[fileNames] = full_path
     return subfiles
+
+def is_c_or_cpp_file(filename):
+        valid_extensions = ['.c', '.cpp']
+        return any(filename.lower().endswith(ext) for ext in valid_extensions)
 
 def main():
         filename = input("Put in file Name:")
@@ -27,7 +34,12 @@ def main():
                         break
                 
                 if filename in all_subFolders.keys():
-                        #inform the user the file has been found only once using the flag
+                        if not is_c_or_cpp_file(filename):
+                                print(f"Error: '{filename}' is not a C or C++ file.")
+                                print("Supported extensions: .c, .cpp, .cc, .cxx, .h, .hpp")
+                                filename = input("Please enter a C or C++ file name:")
+                                continue
+                        
                         if not file_discovered_flag:
                                 print("File Found")
                                 file_discovered_flag = True
@@ -35,17 +47,15 @@ def main():
                         #read the file the user wants to review
                         with open(all_subFolders[filename]) as f:
                                 file_content = f.read()
-                                #checks for any changes made to the file(This method forces user to save for changes to be recognized)
                                 if file_content != old_file_content:
-                                        security_checker(file_content)
-                                        print(file_content)
-                                old_file_content = file_content
+                                        os.system("cls")
+                                        # Determine language based on file extension
+                                        language = "C++" if filename.lower().endswith(('.cpp')) else "C"
+                                        analyze_c_code(file_content, language)
+                                        old_file_content = file_content
                 else:
                         #If file is not found, inform user and prompt again
                         print("File not found. Please try again.")
                         filename = input("Put in file Name:")
-                
-                
-def security_checker(file_content):        
-        pass
+                time.sleep(0.5) 
 main()
