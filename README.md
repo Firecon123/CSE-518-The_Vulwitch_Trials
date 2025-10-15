@@ -7,7 +7,7 @@ Chase Allard | chaseall@buffalo.edu | MS Computer Science & Engineering
 Hongbin Jin  | hongbinj@buffalo.edu | MS Computer Science & Engineering  
 Jeffrey Yau  | jyau6@buffalo.edu    | MS Computer Science & Engineering
 
-## Play aroung with AST
+## Play around with AST
 
 You can use [ast\_dump.py](/ast_main.py) to play around with abstract syntax
 trees (ASTs).
