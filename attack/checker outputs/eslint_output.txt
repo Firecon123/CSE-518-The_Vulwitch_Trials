@@ -1,0 +1,103 @@
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\_components\keyGen.ts
+    4:16   error    'JsonWebKey' is not defined    no-undef
+   11:84   error    'JsonWebKey' is not defined    no-undef
+   47:112  error    'JsonWebKey' is not defined    no-undef
+   64:41   error    'JsonWebKey' is not defined    no-undef
+  110:4    warning  Generic Object Injection Sink  security/detect-object-injection
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\_components\logout-button.tsx
+  10:10  error  'React' is not defined  no-undef
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\_components\two-factor-verification.tsx
+  59:3   warning  Generic Object Injection Sink  security/detect-object-injection
+  70:33  warning  Generic Object Injection Sink  security/detect-object-injection
+  83:4   warning  Generic Object Injection Sink  security/detect-object-injection
+  83:17  warning  Generic Object Injection Sink  security/detect-object-injection
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\firebase-action\_components\email-verification.tsx
+  94:22  error  'React' is not defined  no-undef
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\firebase-action\_components\password-reset.tsx
+   21:40  error  'React' is not defined  no-undef
+  168:19  error  'React' is not defined  no-undef
+  176:22  error  'React' is not defined  no-undef
+  186:19  error  'React' is not defined  no-undef
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\firebase-action\page.tsx
+  91:22  error  'React' is not defined  no-undef
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\app\homePage\page.tsx
+  3:22  warning  'EmailAuthProvider' is defined but never used             @typescript-eslint/no-unused-vars
+  3:41  warning  'reauthenticateWithCredential' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\lib\firebase-npm\index.d.ts
+   66:31  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   72:37  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   73:13  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   75:10  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   85:38  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   89:10  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  104:49  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  107:20  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  110:29  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  167:20  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  181:13  error    'OrderByDirection' is already defined              no-redeclare
+  182:13  error    'WhereFilterOp' is already defined                 no-redeclare
+  186:18  error    'FirebaseAdminConfig' is already defined           no-redeclare
+  232:18  error    'InitFirebaseAdminInput' is already defined        no-redeclare
+  244:18  error    'Document' is already defined                      no-redeclare
+  244:31  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  250:18  error    'GetDocumentRes' is already defined                no-redeclare
+  250:37  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  251:13  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  253:10  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  263:18  error    'GetDocumentsRes' is already defined               no-redeclare
+  263:38  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  267:10  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  270:18  error    'toJsonResponse' is already defined                no-redeclare
+  281:18  error    'CollectionOperationsInstance' is already defined  no-redeclare
+  282:49  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  285:20  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  288:29  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  291:15  error    'FirestoreOperations' is already defined           no-redeclare
+  310:15  error    'DocOperations' is already defined                 no-redeclare
+  345:20  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  347:15  error    'RestFirestoreInstance' is already defined         no-redeclare
+  356:25  error    'initFirebaseRest' is already defined              no-redeclare
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\lib\firebase-npm\index.js
+    3:34  warning  Generic Object Injection Sink                                          security/detect-object-injection
+    3:87  warning  Generic Object Injection Sink                                          security/detect-object-injection
+   82:2   error    Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+   84:67  warning  Function Call Object Injection Sink                                    security/detect-object-injection
+   89:39  warning  Generic Object Injection Sink                                          security/detect-object-injection
+  114:2   error    Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+  138:81  warning  Function Call Object Injection Sink                                    security/detect-object-injection
+  149:14  warning  Variable Assigned to Object Injection Sink                             security/detect-object-injection
+  150:4   warning  Generic Object Injection Sink                                          security/detect-object-injection
+  158:14  warning  Variable Assigned to Object Injection Sink                             security/detect-object-injection
+  160:5   warning  Generic Object Injection Sink                                          security/detect-object-injection
+  164:25  warning  Generic Object Injection Sink                                          security/detect-object-injection
+  165:9   warning  Generic Object Injection Sink                                          security/detect-object-injection
+  172:14  warning  Variable Assigned to Object Injection Sink                             security/detect-object-injection
+  252:11  warning  '$' is defined but never used                                          @typescript-eslint/no-unused-vars
+  452:14  warning  Generic Object Injection Sink                                          security/detect-object-injection
+  503:3   error    Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\lib\models\chatKey.ts
+    6:13  error    'JsonWebKey' is not defined        no-undef
+   18:85  error    'JsonWebKey' is not defined        no-undef
+   68:81  error    'JsonWebKey' is not defined        no-undef
+   92:84  error    'JsonWebKey' is not defined        no-undef
+   96:29  error    'JsonWebKey' is not defined        no-undef
+  128:11  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\lib\models\userPublicKey.ts
+  17:13  error  'JsonWebKey' is not defined  no-undef
+  29:13  error  'JsonWebKey' is not defined  no-undef
+  63:12  error  'JsonWebKey' is not defined  no-undef
+
+C:\Users\eldar\Documents\College\Semesters\Semester 7\CSE 518\Phase 2\CSE418-Project\src\lib\rateLimiter.ts
+  40:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 78 problems (35 errors, 43 warnings)

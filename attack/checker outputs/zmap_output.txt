@@ -1,0 +1,108 @@
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-10-26 18:20 EDT
+NSE: Loaded 157 scripts for scanning.
+NSE: Script Pre-scanning.
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Initiating Ping Scan at 18:20
+Scanning cse418-project-mirror.pages.dev (172.66.47.67) [4 ports]
+Completed Ping Scan at 18:20, 0.08s elapsed (1 total hosts)
+Initiating Parallel DNS resolution of 1 host. at 18:20
+Completed Parallel DNS resolution of 1 host. at 18:20, 0.00s elapsed
+Initiating SYN Stealth Scan at 18:20
+Scanning cse418-project-mirror.pages.dev (172.66.47.67) [1000 ports]
+Discovered open port 443/tcp on 172.66.47.67
+Discovered open port 8080/tcp on 172.66.47.67
+Discovered open port 80/tcp on 172.66.47.67
+Discovered open port 8443/tcp on 172.66.47.67
+Completed SYN Stealth Scan at 18:20, 5.46s elapsed (1000 total ports)
+Initiating Service scan at 18:20
+Scanning 4 services on cse418-project-mirror.pages.dev (172.66.47.67)
+Completed Service scan at 18:20, 12.55s elapsed (4 services on 1 host)
+Initiating OS detection (try #1) against cse418-project-mirror.pages.dev (172.66.47.67)
+Retrying OS detection (try #2) against cse418-project-mirror.pages.dev (172.66.47.67)
+Initiating Traceroute at 18:20
+Completed Traceroute at 18:20, 0.02s elapsed
+Initiating Parallel DNS resolution of 2 hosts. at 18:20
+Completed Parallel DNS resolution of 2 hosts. at 18:20, 0.05s elapsed
+NSE: Script scanning 172.66.47.67.
+Initiating NSE at 18:20
+Completed NSE at 18:20, 5.25s elapsed
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.57s elapsed
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Nmap scan report for cse418-project-mirror.pages.dev (172.66.47.67)
+Host is up (0.0098s latency).
+Other addresses for cse418-project-mirror.pages.dev (not scanned): 172.66.44.189 2606:4700:310c::ac42:2cbd 2606:4700:310c::ac42:2f43
+Not shown: 996 filtered tcp ports (no-response)
+PORT     STATE SERVICE  VERSION
+80/tcp   open  http     Cloudflare http proxy
+|_http-server-header: cloudflare
+|_http-title: Did not follow redirect to https://cse418-project-mirror.pages.dev/
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+443/tcp  open  ssl/http Cloudflare http proxy
+|_http-server-header: cloudflare
+| http-methods: 
+|_  Supported Methods: GET HEAD
+| ssl-cert: Subject: commonName=cse418-project-mirror.pages.dev
+| Subject Alternative Name: DNS:cse418-project-mirror.pages.dev, DNS:*.cse418-project-mirror.pages.dev
+| Issuer: commonName=WE1/organizationName=Google Trust Services/countryName=US
+| Public Key type: ec
+| Public Key bits: 256
+| Signature Algorithm: ecdsa-with-SHA256
+| Not valid before: 2025-09-23T20:29:55
+| Not valid after:  2025-12-22T21:27:32
+| MD5:   41d9:59ae:967a:6b0b:57ef:2a95:ed13:15cc
+|_SHA-1: eb05:6e82:bb0c:1023:e704:ace6:7d89:377a:72d1:36a0
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+8080/tcp open  http     Cloudflare http proxy
+|_http-title: Did not follow redirect to https://cse418-project-mirror.pages.dev:8080/
+|_http-server-header: cloudflare
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+8443/tcp open  ssl/http Cloudflare http proxy
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-server-header: cloudflare
+| ssl-cert: Subject: commonName=cse418-project-mirror.pages.dev
+| Subject Alternative Name: DNS:cse418-project-mirror.pages.dev, DNS:*.cse418-project-mirror.pages.dev
+| Issuer: commonName=WE1/organizationName=Google Trust Services/countryName=US
+| Public Key type: ec
+| Public Key bits: 256
+| Signature Algorithm: ecdsa-with-SHA256
+| Not valid before: 2025-09-23T20:29:55
+| Not valid after:  2025-12-22T21:27:32
+| MD5:   41d9:59ae:967a:6b0b:57ef:2a95:ed13:15cc
+|_SHA-1: eb05:6e82:bb0c:1023:e704:ace6:7d89:377a:72d1:36a0
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: bridge|VoIP adapter|general purpose
+Running (JUST GUESSING): Oracle Virtualbox (96%), Slirp (96%), AT&T embedded (92%), QEMU (91%)
+OS CPE: cpe:/o:oracle:virtualbox cpe:/a:danny_gasparovski:slirp cpe:/a:qemu:qemu
+Aggressive OS guesses: Oracle Virtualbox Slirp NAT bridge (96%), AT&T BGW210 voice gateway (92%), QEMU user mode network gateway (91%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=17 (Good luck!)
+IP ID Sequence Generation: Incremental
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT     ADDRESS
+1   5.29 ms 10.0.2.2
+2   5.60 ms 172.66.47.67
+
+NSE: Script Post-scanning.
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Initiating NSE at 18:20
+Completed NSE at 18:20, 0.00s elapsed
+Read data files from: /usr/share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 28.80 seconds
+           Raw packets sent: 2057 (93.660KB) | Rcvd: 46 (2.420KB)

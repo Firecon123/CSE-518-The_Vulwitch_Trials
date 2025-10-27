@@ -13,7 +13,7 @@ def PasswordGenerator (number_generated, max_length):
     # Combine all characters
     all_characters = letters + digits + symbols
 
-    with open("./attack/passwords.txt", "w") as f:
+    with open("./attack/password cracker/passwords.txt", "w") as f:
         while count < number_generated:
             password = ''
             length = secrets.choice(range(8, max_length))
@@ -26,4 +26,4 @@ def PasswordGenerator (number_generated, max_length):
                     count += 1
         
 if __name__ == "__main__":
-    PasswordGenerator(1000, 13)
+    PasswordGenerator(10000, 13)
