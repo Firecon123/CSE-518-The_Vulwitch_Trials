@@ -1,0 +1,2116 @@
+---
+queries:
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: AngularJS/DisablingSce.ql
+  relativeBqrsPath: codeql/javascript-queries/AngularJS/DisablingSce.bqrs
+  metadata:
+    name: Disabling SCE
+    description: Disabling strict contextual escaping (SCE) can cause security vulnerabilities.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: very-high
+    id: js/angular/disabling-sce
+    tags: |-
+      security
+             maintainability
+             frameworks/angularjs
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: AngularJS/DoubleCompilation.ql
+  relativeBqrsPath: codeql/javascript-queries/AngularJS/DoubleCompilation.bqrs
+  metadata:
+    name: Double compilation
+    description: |-
+      Recompiling an already compiled part of the DOM can lead to
+                    unexpected behavior of directives, performance problems, and memory leaks.
+    kind: problem
+    problem.severity: warning
+    security-severity: 8.8
+    id: js/angular/double-compilation
+    tags: |-
+      reliability
+             frameworks/angularjs
+             security
+             external/cwe/cwe-1176
+    precision: very-high
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: AngularJS/InsecureUrlWhitelist.ql
+  relativeBqrsPath: codeql/javascript-queries/AngularJS/InsecureUrlWhitelist.bqrs
+  metadata:
+    name: Insecure URL whitelist
+    description: URL whitelists that are too permissive can cause security vulnerabilities.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: very-high
+    id: js/angular/insecure-url-whitelist
+    tags: |-
+      security
+             frameworks/angularjs
+             external/cwe/cwe-183
+             external/cwe/cwe-625
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Diagnostics/ExtractedFiles.ql
+  relativeBqrsPath: codeql/javascript-queries/Diagnostics/ExtractedFiles.bqrs
+  metadata:
+    name: Extracted files
+    description: Lists all files in the source code directory that were extracted.
+    kind: diagnostic
+    id: js/diagnostics/successfully-extracted-files
+    tags: successfully-extracted-files
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Diagnostics/ExtractionErrors.ql
+  relativeBqrsPath: codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs
+  metadata:
+    name: Extraction errors
+    description: List all extraction errors for files in the source code directory.
+    kind: diagnostic
+    id: js/diagnostics/extraction-errors
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Electron/AllowRunningInsecureContent.ql
+  relativeBqrsPath: codeql/javascript-queries/Electron/AllowRunningInsecureContent.bqrs
+  metadata:
+    name: Enabling Electron allowRunningInsecureContent
+    description: Enabling allowRunningInsecureContent can allow remote code execution.
+    kind: problem
+    problem.severity: error
+    security-severity: 8.8
+    precision: very-high
+    tags: |-
+      security
+             frameworks/electron
+             external/cwe/cwe-494
+    id: js/enabling-electron-insecure-content
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Electron/DisablingWebSecurity.ql
+  relativeBqrsPath: codeql/javascript-queries/Electron/DisablingWebSecurity.bqrs
+  metadata:
+    name: Disabling Electron webSecurity
+    description: Disabling webSecurity can cause critical security vulnerabilities.
+    kind: problem
+    problem.severity: error
+    security-severity: 6.1
+    precision: very-high
+    tags: |-
+      security
+             frameworks/electron
+             external/cwe/cwe-079
+    id: js/disabling-electron-websecurity
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Performance/PolynomialReDoS.ql
+  relativeBqrsPath: codeql/javascript-queries/Performance/PolynomialReDoS.bqrs
+  metadata:
+    name: Polynomial regular expression used on uncontrolled data
+    description: |-
+      A regular expression that can require polynomial time
+                    to match may be vulnerable to denial-of-service attacks.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/polynomial-redos
+    tags: |-
+      security
+             external/cwe/cwe-1333
+             external/cwe/cwe-730
+             external/cwe/cwe-400
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Performance/ReDoS.ql
+  relativeBqrsPath: codeql/javascript-queries/Performance/ReDoS.bqrs
+  metadata:
+    name: Inefficient regular expression
+    description: |-
+      A regular expression that requires exponential time to match certain inputs
+                    can be a performance bottleneck, and may be vulnerable to denial-of-service
+                    attacks.
+    kind: problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/redos
+    tags: |-
+      security
+             external/cwe/cwe-1333
+             external/cwe/cwe-730
+             external/cwe/cwe-400
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: RegExp/IdentityReplacement.ql
+  relativeBqrsPath: codeql/javascript-queries/RegExp/IdentityReplacement.bqrs
+  metadata:
+    name: Replacement of a substring with itself
+    description: Replacing a substring with itself has no effect and may indicate
+      a mistake.
+    kind: problem
+    problem.severity: warning
+    security-severity: 5.0
+    id: js/identity-replacement
+    precision: very-high
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-020/IncompleteHostnameRegExp.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-020/IncompleteHostnameRegExp.bqrs
+  metadata:
+    name: Incomplete regular expression for hostnames
+    description: Matching a URL or hostname against a regular expression that contains
+      an unescaped dot as part of the hostname might match more hostnames than expected.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/incomplete-hostname-regexp
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-020/IncompleteUrlSchemeCheck.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-020/IncompleteUrlSchemeCheck.bqrs
+  metadata:
+    name: Incomplete URL scheme check
+    description: |-
+      Checking for the "javascript:" URL scheme without also checking for "vbscript:"
+                    and "data:" suggests a logic error or even a security vulnerability.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/incomplete-url-scheme-check
+    tags: |-
+      security
+             correctness
+             external/cwe/cwe-020
+             external/cwe/cwe-184
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-020/IncompleteUrlSubstringSanitization.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-020/IncompleteUrlSubstringSanitization.bqrs
+  metadata:
+    name: Incomplete URL substring sanitization
+    description: Security checks on the substrings of an unparsed URL are often vulnerable
+      to bypassing.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/incomplete-url-substring-sanitization
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-020/IncorrectSuffixCheck.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-020/IncorrectSuffixCheck.bqrs
+  metadata:
+    name: Incorrect suffix check
+    description: Using indexOf to implement endsWith functionality is error-prone
+      if the -1 case is not explicitly handled.
+    kind: problem
+    problem.severity: error
+    security-severity: 7.8
+    precision: high
+    id: js/incorrect-suffix-check
+    tags: |-
+      security
+             correctness
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-020/OverlyLargeRange.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-020/OverlyLargeRange.bqrs
+  metadata:
+    name: Overly permissive regular expression range
+    description: |-
+      Overly permissive regular expression ranges match a wider range of characters than intended.
+                    This may allow an attacker to bypass a filter or sanitizer.
+    kind: problem
+    problem.severity: warning
+    security-severity: 5.0
+    precision: high
+    id: js/overly-large-range
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-020/UselessRegExpCharacterEscape.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-020/UselessRegExpCharacterEscape.bqrs
+  metadata:
+    name: Useless regular-expression character escape
+    description: |-
+      Prepending a backslash to an ordinary character in a string
+                    does not have any effect, and may make regular expressions constructed from this string
+                    behave unexpectedly.
+    kind: problem
+    problem.severity: error
+    security-severity: 7.8
+    precision: high
+    id: js/useless-regexp-character-escape
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-022/TaintedPath.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-022/TaintedPath.bqrs
+  metadata:
+    name: Uncontrolled data used in path expression
+    description: |-
+      Accessing paths influenced by users can allow an attacker to access
+                    unexpected resources.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/path-injection
+    tags: |-
+      security
+             external/cwe/cwe-022
+             external/cwe/cwe-023
+             external/cwe/cwe-036
+             external/cwe/cwe-073
+             external/cwe/cwe-099
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-022/ZipSlip.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-022/ZipSlip.bqrs
+  metadata:
+    name: Arbitrary file access during archive extraction ("Zip Slip")
+    description: |-
+      Extracting files from a malicious ZIP file, or similar type of archive, without
+                    validating that the destination file path is within the destination directory
+                    can allow an attacker to unexpectedly gain access to resources.
+    kind: path-problem
+    id: js/zipslip
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    tags: |-
+      security
+             external/cwe/cwe-022
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-073/TemplateObjectInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-073/TemplateObjectInjection.bqrs
+  metadata:
+    name: Template Object Injection
+    description: Instantiating a template using a user-controlled object is vulnerable
+      to local file read and potential remote code execution.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.3
+    precision: high
+    id: js/template-object-injection
+    tags: |-
+      security
+             external/cwe/cwe-073
+             external/cwe/cwe-094
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-078/CommandInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-078/CommandInjection.bqrs
+  metadata:
+    name: Uncontrolled command line
+    description: |-
+      Using externally controlled strings in a command line may allow a malicious
+                    user to change the meaning of the command.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.8
+    precision: high
+    id: js/command-line-injection
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-078
+             external/cwe/cwe-088
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-078/SecondOrderCommandInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-078/SecondOrderCommandInjection.bqrs
+  metadata:
+    name: Second order command injection
+    description: |-
+      Using user-controlled data as arguments to some commands, such as git clone,
+                    can allow arbitrary commands to be executed.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.0
+    precision: high
+    id: js/second-order-command-line-injection
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-078
+             external/cwe/cwe-088
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-078/ShellCommandInjectionFromEnvironment.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-078/ShellCommandInjectionFromEnvironment.bqrs
+  metadata:
+    name: Shell command built from environment values
+    description: |-
+      Building a shell command string with values from the enclosing
+                    environment may cause subtle bugs or vulnerabilities.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.3
+    precision: high
+    id: js/shell-command-injection-from-environment
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-078
+             external/cwe/cwe-088
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-078/UnsafeShellCommandConstruction.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-078/UnsafeShellCommandConstruction.bqrs
+  metadata:
+    name: Unsafe shell command constructed from library input
+    description: |-
+      Using externally controlled strings in a command line may allow a malicious
+                    user to change the meaning of the command.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 6.3
+    precision: high
+    id: js/shell-command-constructed-from-input
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-078
+             external/cwe/cwe-088
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-078/UselessUseOfCat.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-078/UselessUseOfCat.bqrs
+  metadata:
+    name: Unnecessary use of `cat` process
+    description: "Using the  `cat` process to read a file is unnecessarily complex,\
+      \ inefficient, unportable, and can lead to subtle bugs, or even security vulnerabilities."
+    kind: problem
+    problem.severity: error
+    security-severity: 6.3
+    precision: high
+    id: js/unnecessary-use-of-cat
+    tags: |-
+      correctness
+             security
+             maintainability
+             external/cwe/cwe-078
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/ExceptionXss.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/ExceptionXss.bqrs
+  metadata:
+    name: Exception text reinterpreted as HTML
+    description: |-
+      Reinterpreting text from an exception as HTML
+                    can lead to a cross-site scripting vulnerability.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: high
+    id: js/xss-through-exception
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/ReflectedXss.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/ReflectedXss.bqrs
+  metadata:
+    name: Reflected cross-site scripting
+    description: |-
+      Writing user input directly to an HTTP response allows for
+                    a cross-site scripting vulnerability.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.8
+    precision: high
+    id: js/reflected-xss
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/StoredXss.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/StoredXss.bqrs
+  metadata:
+    name: Stored cross-site scripting
+    description: |-
+      Using uncontrolled stored values in HTML allows for
+                    a stored cross-site scripting vulnerability.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.8
+    precision: high
+    id: js/stored-xss
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/UnsafeHtmlConstruction.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/UnsafeHtmlConstruction.bqrs
+  metadata:
+    name: Unsafe HTML constructed from library input
+    description: |-
+      Using externally controlled strings to construct HTML might allow a malicious
+                    user to perform a cross-site scripting attack.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 6.1
+    precision: high
+    id: js/html-constructed-from-input
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/UnsafeJQueryPlugin.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/UnsafeJQueryPlugin.bqrs
+  metadata:
+    name: Unsafe jQuery plugin
+    description: A jQuery plugin that unintentionally constructs HTML from some of
+      its options may be unsafe to use for clients.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: high
+    id: js/unsafe-jquery-plugin
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+             frameworks/jquery
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/Xss.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/Xss.bqrs
+  metadata:
+    name: Client-side cross-site scripting
+    description: |-
+      Writing user input directly to the DOM allows for
+                    a cross-site scripting vulnerability.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.8
+    precision: high
+    id: js/xss
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-079/XssThroughDom.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-079/XssThroughDom.bqrs
+  metadata:
+    name: DOM text reinterpreted as HTML
+    description: |-
+      Reinterpreting text from the DOM as HTML
+                    can lead to a cross-site scripting vulnerability.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: high
+    id: js/xss-through-dom
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-089/SqlInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-089/SqlInjection.bqrs
+  metadata:
+    name: Database query built from user-controlled sources
+    description: |-
+      Building a database query from user-controlled sources is vulnerable to insertion of
+                    malicious code by the user.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 8.8
+    precision: high
+    id: js/sql-injection
+    tags: |-
+      security
+             external/cwe/cwe-089
+             external/cwe/cwe-090
+             external/cwe/cwe-943
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-094/CodeInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-094/CodeInjection.bqrs
+  metadata:
+    name: Code injection
+    description: |-
+      Interpreting unsanitized user input as code allows a malicious user arbitrary
+                    code execution.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.3
+    precision: high
+    id: js/code-injection
+    tags: |-
+      security
+             external/cwe/cwe-094
+             external/cwe/cwe-095
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-094/ImproperCodeSanitization.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-094/ImproperCodeSanitization.bqrs
+  metadata:
+    name: Improper code sanitization
+    description: Escaping code as HTML does not provide protection against code injection.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 6.1
+    precision: high
+    id: js/bad-code-sanitization
+    tags: |-
+      security
+             external/cwe/cwe-094
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-094/UnsafeDynamicMethodAccess.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-094/UnsafeDynamicMethodAccess.bqrs
+  metadata:
+    name: Unsafe dynamic method access
+    description: Invoking user-controlled methods on certain objects can lead to remote
+      code execution.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.3
+    precision: high
+    id: js/unsafe-dynamic-method-access
+    tags: |-
+      security
+             external/cwe/cwe-094
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-1004/ClientExposedCookie.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-1004/ClientExposedCookie.bqrs
+  metadata:
+    name: Sensitive server cookie exposed to the client
+    description: Sensitive cookies set by a server can be read by the client if the
+      `httpOnly` flag is not set.
+    kind: problem
+    problem.severity: warning
+    security-severity: 5.0
+    precision: high
+    id: js/client-exposed-cookie
+    tags: |-
+      security
+             external/cwe/cwe-1004
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-116/BadTagFilter.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-116/BadTagFilter.bqrs
+  metadata:
+    name: Bad HTML filtering regexp
+    description: "Matching HTML tags using regular expressions is hard to do right,\
+      \ and can easily lead to security issues."
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/bad-tag-filter
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+             external/cwe/cwe-080
+             external/cwe/cwe-116
+             external/cwe/cwe-184
+             external/cwe/cwe-185
+             external/cwe/cwe-186
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-116/DoubleEscaping.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-116/DoubleEscaping.bqrs
+  metadata:
+    name: Double escaping or unescaping
+    description: |-
+      When escaping special characters using a meta-character like backslash or
+                    ampersand, the meta-character has to be escaped first to avoid double-escaping,
+                    and conversely it has to be unescaped last to avoid double-unescaping.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/double-escaping
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-116
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-116/IncompleteHtmlAttributeSanitization.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-116/IncompleteHtmlAttributeSanitization.bqrs
+  metadata:
+    name: Incomplete HTML attribute sanitization
+    description: |-
+      Writing incompletely sanitized values to HTML
+                    attribute strings can lead to a cross-site
+                    scripting vulnerability.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: high
+    id: js/incomplete-html-attribute-sanitization
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+             external/cwe/cwe-020
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-116/IncompleteMultiCharacterSanitization.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-116/IncompleteMultiCharacterSanitization.bqrs
+  metadata:
+    name: Incomplete multi-character sanitization
+    description: A sanitizer that removes a sequence of characters may reintroduce
+      the dangerous sequence.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/incomplete-multi-character-sanitization
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+             external/cwe/cwe-080
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-116/IncompleteSanitization.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-116/IncompleteSanitization.bqrs
+  metadata:
+    name: Incomplete string escaping or encoding
+    description: |-
+      A string transformer that does not replace or escape all occurrences of a
+                    meta-character may be ineffective.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/incomplete-sanitization
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-020
+             external/cwe/cwe-080
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-116/UnsafeHtmlExpansion.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-116/UnsafeHtmlExpansion.bqrs
+  metadata:
+    name: Unsafe expansion of self-closing HTML tag
+    description: |-
+      Using regular expressions to expand self-closing HTML
+                    tags may lead to cross-site scripting vulnerabilities.
+    kind: problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: very-high
+    id: js/unsafe-html-expansion
+    tags: |-
+      correctness
+             security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-134/TaintedFormatString.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-134/TaintedFormatString.bqrs
+  metadata:
+    name: Use of externally-controlled format string
+    description: Using external input in format strings can lead to garbled output.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.3
+    precision: high
+    id: js/tainted-format-string
+    tags: |-
+      security
+             external/cwe/cwe-134
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-178/CaseSensitiveMiddlewarePath.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-178/CaseSensitiveMiddlewarePath.bqrs
+  metadata:
+    name: Case-sensitive middleware path
+    description: Middleware with case-sensitive paths do not protect endpoints with
+      case-insensitive paths.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.3
+    precision: high
+    id: js/case-sensitive-middleware-path
+    tags: |-
+      security
+             external/cwe/cwe-178
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-200/PrivateFileExposure.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-200/PrivateFileExposure.bqrs
+  metadata:
+    name: Exposure of private files
+    description: |-
+      Exposing a node_modules folder, or the project folder to the public, can cause exposure
+                    of private information.
+    kind: problem
+    problem.severity: warning
+    security-severity: 6.5
+    id: js/exposure-of-private-files
+    tags: |-
+      security
+             external/cwe/cwe-200
+             external/cwe/cwe-219
+             external/cwe/cwe-548
+    precision: high
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-201/PostMessageStar.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-201/PostMessageStar.bqrs
+  metadata:
+    name: Cross-window communication with unrestricted target origin
+    description: |-
+      When sending sensitive information to another window using `postMessage`,
+                    the origin of the target window should be restricted to avoid unintentional
+                    information leaks.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 4.3
+    precision: high
+    id: js/cross-window-information-leak
+    tags: |-
+      security
+             external/cwe/cwe-201
+             external/cwe/cwe-359
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-209/StackTraceExposure.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-209/StackTraceExposure.bqrs
+  metadata:
+    name: Information exposure through a stack trace
+    description: |-
+      Propagating stack trace information to an external user can
+                    unintentionally reveal implementation details that are useful
+                    to an attacker for developing a subsequent exploit.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 5.4
+    precision: very-high
+    id: js/stack-trace-exposure
+    tags: |-
+      security
+             external/cwe/cwe-209
+             external/cwe/cwe-497
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-295/DisablingCertificateValidation.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-295/DisablingCertificateValidation.bqrs
+  metadata:
+    name: Disabling certificate validation
+    description: Disabling cryptographic certificate validation can cause security
+      vulnerabilities.
+    kind: problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: very-high
+    id: js/disabling-certificate-validation
+    tags: |-
+      security
+             external/cwe/cwe-295
+             external/cwe/cwe-297
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-300/InsecureDependencyResolution.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-300/InsecureDependencyResolution.bqrs
+  metadata:
+    name: Dependency download using unencrypted communication channel
+    description: |-
+      Using unencrypted protocols to fetch dependencies can leave an application
+                    open to man-in-the-middle attacks.
+    kind: problem
+    problem.severity: warning
+    security-severity: 8.1
+    precision: high
+    id: js/insecure-dependency
+    tags: |-
+      security
+             external/cwe/cwe-300
+             external/cwe/cwe-319
+             external/cwe/cwe-494
+             external/cwe/cwe-829
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-312/BuildArtifactLeak.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-312/BuildArtifactLeak.bqrs
+  metadata:
+    name: Storage of sensitive information in build artifact
+    description: |-
+      Including sensitive information in a build artifact can
+                    expose it to an attacker.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/build-artifact-leak
+    tags: |-
+      security
+             external/cwe/cwe-312
+             external/cwe/cwe-315
+             external/cwe/cwe-359
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-312/CleartextLogging.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-312/CleartextLogging.bqrs
+  metadata:
+    name: Clear-text logging of sensitive information
+    description: |-
+      Logging sensitive information without encryption or hashing can
+                    expose it to an attacker.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/clear-text-logging
+    tags: |-
+      security
+             external/cwe/cwe-312
+             external/cwe/cwe-359
+             external/cwe/cwe-532
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-312/CleartextStorage.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-312/CleartextStorage.bqrs
+  metadata:
+    name: Clear text storage of sensitive information
+    description: |-
+      Sensitive information stored without encryption or hashing can expose it to an
+                    attacker.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/clear-text-storage-of-sensitive-data
+    tags: |-
+      security
+             external/cwe/cwe-312
+             external/cwe/cwe-315
+             external/cwe/cwe-359
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-326/InsufficientKeySize.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-326/InsufficientKeySize.bqrs
+  metadata:
+    name: Use of a weak cryptographic key
+    description: Using a weak cryptographic key can allow an attacker to compromise
+      security.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/insufficient-key-size
+    tags: |-
+      security
+             external/cwe/cwe-326
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-327/BadRandomness.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-327/BadRandomness.bqrs
+  metadata:
+    name: Creating biased random numbers from a cryptographically secure source
+    description: |-
+      Some mathematical operations on random numbers can cause bias in
+                    the results and compromise security.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/biased-cryptographic-random
+    tags: |-
+      security
+             external/cwe/cwe-327
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-327/BrokenCryptoAlgorithm.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-327/BrokenCryptoAlgorithm.bqrs
+  metadata:
+    name: Use of a broken or weak cryptographic algorithm
+    description: Using broken or weak cryptographic algorithms can compromise security.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/weak-cryptographic-algorithm
+    tags: |-
+      security
+             external/cwe/cwe-327
+             external/cwe/cwe-328
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-338/InsecureRandomness.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-338/InsecureRandomness.bqrs
+  metadata:
+    name: Insecure randomness
+    description: |-
+      Using a cryptographically weak pseudo-random number generator to generate a
+                    security-sensitive value may allow an attacker to predict what value will
+                    be generated.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.8
+    precision: high
+    id: js/insecure-randomness
+    tags: |-
+      security
+             external/cwe/cwe-338
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-346/CorsMisconfigurationForCredentials.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-346/CorsMisconfigurationForCredentials.bqrs
+  metadata:
+    name: CORS misconfiguration for credentials transfer
+    description: Misconfiguration of CORS HTTP headers allows for leaks of secret
+      credentials.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/cors-misconfiguration-for-credentials
+    tags: |-
+      security
+             external/cwe/cwe-346
+             external/cwe/cwe-639
+             external/cwe/cwe-942
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-347/MissingJWTKeyVerification.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-347/MissingJWTKeyVerification.bqrs
+  metadata:
+    name: JWT missing secret or public key verification
+    description: The application does not verify the JWT payload with a cryptographic
+      secret or public key.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.0
+    precision: high
+    id: js/jwt-missing-verification
+    tags: |-
+      security
+             external/cwe/cwe-347
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-352/MissingCsrfMiddleware.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-352/MissingCsrfMiddleware.bqrs
+  metadata:
+    name: Missing CSRF middleware
+    description: |-
+      Using cookies without CSRF protection may allow malicious websites to
+                    submit requests on behalf of the user.
+    kind: problem
+    problem.severity: error
+    security-severity: 8.8
+    precision: high
+    id: js/missing-token-validation
+    tags: |-
+      security
+             external/cwe/cwe-352
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-400/DeepObjectResourceExhaustion.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-400/DeepObjectResourceExhaustion.bqrs
+  metadata:
+    name: Resources exhaustion from deep object traversal
+    description: Processing user-controlled object hierarchies inefficiently can lead
+      to denial of service.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/resource-exhaustion-from-deep-object-traversal
+    tags: |-
+      security
+             external/cwe/cwe-400
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-502/UnsafeDeserialization.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-502/UnsafeDeserialization.bqrs
+  metadata:
+    name: Deserialization of user-controlled data
+    description: |-
+      Deserializing user-controlled data may allow attackers to
+                    execute arbitrary code.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 9.8
+    precision: high
+    id: js/unsafe-deserialization
+    tags: |-
+      security
+             external/cwe/cwe-502
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-598/SensitiveGetQuery.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-598/SensitiveGetQuery.bqrs
+  metadata:
+    name: Sensitive data read from GET request
+    description: |-
+      Placing sensitive data in a GET request increases the risk of
+                    the data being exposed to an attacker.
+    kind: problem
+    problem.severity: warning
+    security-severity: 6.5
+    precision: high
+    id: js/sensitive-get-query
+    tags: |-
+      security
+             external/cwe/cwe-598
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-601/ClientSideUrlRedirect.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-601/ClientSideUrlRedirect.bqrs
+  metadata:
+    name: Client-side URL redirect
+    description: |-
+      Client-side URL redirection based on unvalidated user input
+                    may cause redirection to malicious web sites.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 6.1
+    precision: high
+    id: js/client-side-unvalidated-url-redirection
+    tags: |-
+      security
+             external/cwe/cwe-079
+             external/cwe/cwe-116
+             external/cwe/cwe-601
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-601/ServerSideUrlRedirect.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-601/ServerSideUrlRedirect.bqrs
+  metadata:
+    name: Server-side URL redirect
+    description: |-
+      Server-side URL redirection based on unvalidated user input
+                    may cause redirection to malicious web sites.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    id: js/server-side-unvalidated-url-redirection
+    tags: |-
+      security
+             external/cwe/cwe-601
+    precision: high
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-611/Xxe.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-611/Xxe.bqrs
+  metadata:
+    name: XML external entity expansion
+    description: |-
+      Parsing user input as an XML document with external
+                    entity expansion is vulnerable to XXE attacks.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.1
+    precision: high
+    id: js/xxe
+    tags: |-
+      security
+             external/cwe/cwe-611
+             external/cwe/cwe-827
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-614/ClearTextCookie.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-614/ClearTextCookie.bqrs
+  metadata:
+    name: Clear text transmission of sensitive cookie
+    description: |-
+      Sending sensitive information in a cookie without requring SSL encryption
+                    can expose the cookie to an attacker.
+    kind: problem
+    problem.severity: warning
+    security-severity: 5.0
+    precision: high
+    id: js/clear-text-cookie
+    tags: |-
+      security
+             external/cwe/cwe-614
+             external/cwe/cwe-311
+             external/cwe/cwe-312
+             external/cwe/cwe-319
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-640/HostHeaderPoisoningInEmailGeneration.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-640/HostHeaderPoisoningInEmailGeneration.bqrs
+  metadata:
+    name: Host header poisoning in email generation
+    description: |-
+      Using the HTTP Host header to construct a link in an email can facilitate phishing
+                    attacks and leak password reset tokens.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.8
+    precision: high
+    id: js/host-header-forgery-in-email-generation
+    tags: |-
+      security
+             external/cwe/cwe-640
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-643/XpathInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-643/XpathInjection.bqrs
+  metadata:
+    name: XPath injection
+    description: |-
+      Building an XPath expression from user-controlled sources is vulnerable to insertion of
+                    malicious code by the user.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.8
+    precision: high
+    id: js/xpath-injection
+    tags: |-
+      security
+             external/cwe/cwe-643
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-693/InsecureHelmet.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-693/InsecureHelmet.bqrs
+  metadata:
+    name: Insecure configuration of Helmet security middleware
+    description: The Helmet middleware is used to set security-related HTTP headers
+      in Express applications. This query finds instances where the middleware is
+      configured with important security features disabled.
+    kind: problem
+    problem.severity: error
+    security-severity: 7.0
+    precision: high
+    id: js/insecure-helmet-configuration
+    tags: |-
+      security
+              external/cwe/cwe-693
+              external/cwe/cwe-1021
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-730/RegExpInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-730/RegExpInjection.bqrs
+  metadata:
+    name: Regular expression injection
+    description: |-
+      User input should not be used in regular expressions without first being escaped,
+                    otherwise a malicious user may be able to inject an expression that could require
+                    exponential time on certain inputs.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 7.5
+    precision: high
+    id: js/regex-injection
+    tags: |-
+      security
+             external/cwe/cwe-730
+             external/cwe/cwe-400
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-730/ServerCrash.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-730/ServerCrash.bqrs
+  metadata:
+    name: Server crash
+    description: |-
+      A server that can be forced to crash may be vulnerable to denial-of-service
+                    attacks.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/server-crash
+    tags: |-
+      security
+             external/cwe/cwe-248
+             external/cwe/cwe-730
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-754/UnvalidatedDynamicMethodCall.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-754/UnvalidatedDynamicMethodCall.bqrs
+  metadata:
+    name: Unvalidated dynamic method call
+    description: |-
+      Calling a method with a user-controlled name may dispatch to
+                    an unexpected target, which could cause an exception.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/unvalidated-dynamic-method-call
+    tags: |-
+      security
+             external/cwe/cwe-754
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-770/MissingRateLimiting.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-770/MissingRateLimiting.bqrs
+  metadata:
+    name: Missing rate limiting
+    description: |-
+      An HTTP request handler that performs expensive operations without
+                    restricting the rate at which operations can be carried out is vulnerable
+                    to denial-of-service attacks.
+    kind: problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/missing-rate-limiting
+    tags: |-
+      security
+             external/cwe/cwe-770
+             external/cwe/cwe-307
+             external/cwe/cwe-400
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-770/ResourceExhaustion.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-770/ResourceExhaustion.bqrs
+  metadata:
+    name: Resource exhaustion
+    description: |-
+      Allocating objects or timers with user-controlled
+                    sizes or durations can cause resource exhaustion.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    id: js/resource-exhaustion
+    precision: high
+    tags: |-
+      security
+             external/cwe/cwe-400
+             external/cwe/cwe-770
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-776/XmlBomb.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-776/XmlBomb.bqrs
+  metadata:
+    name: XML internal entity expansion
+    description: |-
+      Parsing user input as an XML document with arbitrary internal
+                    entity expansion is vulnerable to denial-of-service attacks.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    precision: high
+    id: js/xml-bomb
+    tags: |-
+      security
+             external/cwe/cwe-776
+             external/cwe/cwe-400
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-829/InsecureDownload.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-829/InsecureDownload.bqrs
+  metadata:
+    name: Download of sensitive file through insecure connection
+    description: |-
+      Downloading executables and other sensitive files over an insecure connection
+                    opens up for potential man-in-the-middle attacks.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 8.1
+    precision: high
+    id: js/insecure-download
+    tags: |-
+      security
+             external/cwe/cwe-829
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-830/FunctionalityFromUntrustedDomain.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-830/FunctionalityFromUntrustedDomain.bqrs
+  metadata:
+    name: Untrusted domain used in script or other content
+    description: Using a resource from an untrusted or compromised domain makes your
+      code vulnerable to receiving malicious code.
+    kind: problem
+    security-severity: 7.2
+    problem.severity: error
+    id: js/functionality-from-untrusted-domain
+    precision: high
+    tags: |-
+      security
+             external/cwe/cwe-830
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-830/FunctionalityFromUntrustedSource.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-830/FunctionalityFromUntrustedSource.bqrs
+  metadata:
+    name: Inclusion of functionality from an untrusted source
+    description: |-
+      Including functionality from an untrusted source may allow
+                    an attacker to control the functionality and execute arbitrary code.
+    kind: problem
+    problem.severity: warning
+    security-severity: 6.0
+    precision: high
+    id: js/functionality-from-untrusted-source
+    tags: |-
+      security
+             external/cwe/cwe-830
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-834/LoopBoundInjection.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-834/LoopBoundInjection.bqrs
+  metadata:
+    name: Loop bound injection
+    description: |-
+      Iterating over an object with a user-controlled .length
+                    property can cause indefinite looping.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 7.5
+    id: js/loop-bound-injection
+    tags: |-
+      security
+             external/cwe/cwe-834
+             external/cwe/cwe-730
+    precision: high
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-843/TypeConfusionThroughParameterTampering.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-843/TypeConfusionThroughParameterTampering.bqrs
+  metadata:
+    name: Type confusion through parameter tampering
+    description: Sanitizing an HTTP request parameter may be ineffective if the user
+      controls its type.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.8
+    precision: high
+    id: js/type-confusion-through-parameter-tampering
+    tags: |-
+      security
+             external/cwe/cwe-843
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-915/PrototypePollutingAssignment.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-915/PrototypePollutingAssignment.bqrs
+  metadata:
+    name: Prototype-polluting assignment
+    description: |-
+      Modifying an object obtained via a user-controlled property name may
+                    lead to accidental mutation of the built-in Object prototype,
+                    and possibly escalate to remote code execution or cross-site scripting.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: high
+    id: js/prototype-polluting-assignment
+    tags: |-
+      security
+             external/cwe/cwe-078
+             external/cwe/cwe-079
+             external/cwe/cwe-094
+             external/cwe/cwe-400
+             external/cwe/cwe-471
+             external/cwe/cwe-915
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-915/PrototypePollutingFunction.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-915/PrototypePollutingFunction.bqrs
+  metadata:
+    name: Prototype-polluting function
+    description: |-
+      Functions recursively assigning properties on objects may be
+                    the cause of accidental modification of a built-in prototype object.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.1
+    precision: high
+    id: js/prototype-pollution-utility
+    tags: |-
+      security
+             external/cwe/cwe-078
+             external/cwe/cwe-079
+             external/cwe/cwe-094
+             external/cwe/cwe-400
+             external/cwe/cwe-471
+             external/cwe/cwe-915
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-915/PrototypePollutingMergeCall.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-915/PrototypePollutingMergeCall.bqrs
+  metadata:
+    name: Prototype-polluting merge call
+    description: |-
+      Recursively merging a user-controlled object into another object
+                    can allow an attacker to modify the built-in Object prototype,
+                    and possibly escalate to remote code execution or cross-site scripting.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 6.1
+    precision: high
+    id: js/prototype-pollution
+    tags: |-
+      security
+             external/cwe/cwe-078
+             external/cwe/cwe-079
+             external/cwe/cwe-094
+             external/cwe/cwe-400
+             external/cwe/cwe-471
+             external/cwe/cwe-915
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-916/InsufficientPasswordHash.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-916/InsufficientPasswordHash.bqrs
+  metadata:
+    name: Use of password hash with insufficient computational effort
+    description: Creating a hash of a password with low computational effort makes
+      the hash vulnerable to password cracking attacks.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 8.1
+    precision: high
+    id: js/insufficient-password-hash
+    tags: |-
+      security
+             external/cwe/cwe-916
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-918/RequestForgery.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-918/RequestForgery.bqrs
+  metadata:
+    name: Server-side request forgery
+    description: Making a network request with user-controlled data in the URL allows
+      for request forgery attacks.
+    kind: path-problem
+    problem.severity: error
+    security-severity: 9.1
+    precision: high
+    id: js/request-forgery
+    tags: |-
+      security
+             external/cwe/cwe-918
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Security/CWE-942/CorsPermissiveConfiguration.ql
+  relativeBqrsPath: codeql/javascript-queries/Security/CWE-942/CorsPermissiveConfiguration.bqrs
+  metadata:
+    name: Permissive CORS configuration
+    description: Cross-origin resource sharing (CORS) policy allows overly broad access.
+    kind: path-problem
+    problem.severity: warning
+    security-severity: 6.0
+    precision: high
+    id: js/cors-permissive-configuration
+    tags: |-
+      security
+             external/cwe/cwe-942
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Summary/LinesOfCode.ql
+  relativeBqrsPath: codeql/javascript-queries/Summary/LinesOfCode.bqrs
+  metadata:
+    id: js/summary/lines-of-code
+    name: Total lines of JavaScript and TypeScript code in the database
+    description: "The total number of lines of JavaScript or TypeScript code across\
+      \ all files checked into the repository, except in `node_modules`. This is a\
+      \ useful metric of the size of a database. For all files that were seen during\
+      \ extraction, this query counts the lines of code, excluding whitespace or comments."
+    kind: metric
+    tags: |-
+      summary
+             telemetry
+ -
+  pack: codeql/javascript-queries#1
+  relativeQueryPath: Summary/LinesOfUserCode.ql
+  relativeBqrsPath: codeql/javascript-queries/Summary/LinesOfUserCode.bqrs
+  metadata:
+    name: Total lines of user written JavaScript and TypeScript code in the database
+    description: |-
+      The total number of lines of JavaScript and TypeScript code from the source code directory,
+         excluding auto-generated files and files in `node_modules`. This query counts the lines of code, excluding
+         whitespace or comments.
+    kind: metric
+    tags: |-
+      summary
+             lines-of-code
+             debug
+    id: js/summary/lines-of-user-code
+extensionPacks: []
+packs:
+  codeql/javascript-queries#1:
+    name: codeql/javascript-queries
+    version: 2.1.3-dev
+    isLibrary: false
+    isExtensionPack: false
+    localPath: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/javascript/ql/src/
+    localPackDefinitionFile: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/javascript/ql/src/qlpack.yml
+    runDataExtensions:
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/apollo-server.model.yml
+      index: 0
+      firstRowId: 0
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/apollo-server.model.yml
+      index: 1
+      firstRowId: 1
+      rowCount: 2
+      locations:
+        lineNumbers: A=12+1
+        columnNumbers: A=9*2
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/apollo-server.model.yml
+      index: 2
+      firstRowId: 3
+      rowCount: 10
+      locations:
+        lineNumbers: A=19+1*9
+        columnNumbers: A=9*10
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/aws-sdk.model.yml
+      index: 0
+      firstRowId: 13
+      rowCount: 8
+      locations:
+        lineNumbers: A=6+1*7
+        columnNumbers: A=9*8
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/aws-sdk.model.yml
+      index: 1
+      firstRowId: 21
+      rowCount: 10
+      locations:
+        lineNumbers: A=18+1*9
+        columnNumbers: A=9*10
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/aws-sdk.model.yml
+      index: 2
+      firstRowId: 31
+      rowCount: 8
+      locations:
+        lineNumbers: A=32+1*7
+        columnNumbers: A=9*8
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/aws-sdk.model.yml
+      index: 3
+      firstRowId: 39
+      rowCount: 9
+      locations:
+        lineNumbers: A=44+1*8
+        columnNumbers: A=9*9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/axios.model.yml
+      index: 0
+      firstRowId: 48
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/axios.model.yml
+      index: 1
+      firstRowId: 49
+      rowCount: 1
+      locations:
+        lineNumbers: A=12
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/call-me-maybe.model.yml
+      index: 0
+      firstRowId: 50
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/cors.model.yml
+      index: 0
+      firstRowId: 51
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/default-threat-models-fixup.model.yml
+      index: 0
+      firstRowId: 52
+      rowCount: 1
+      locations:
+        lineNumbers: A=8
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/graph-ql.model.yml
+      index: 0
+      firstRowId: 53
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/graph-ql.model.yml
+      index: 1
+      firstRowId: 54
+      rowCount: 1
+      locations:
+        lineNumbers: A=11
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/hana-db-client.model.yml
+      index: 0
+      firstRowId: 55
+      rowCount: 4
+      locations:
+        lineNumbers: A=6+1*3
+        columnNumbers: A=9*4
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/hana-db-client.model.yml
+      index: 1
+      firstRowId: 59
+      rowCount: 2
+      locations:
+        lineNumbers: A=15+1
+        columnNumbers: A=9*2
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/hana-db-client.model.yml
+      index: 2
+      firstRowId: 61
+      rowCount: 6
+      locations:
+        lineNumbers: A=22+1*5
+        columnNumbers: A=9*6
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/make-dir.model.yml
+      index: 0
+      firstRowId: 67
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/markdown-table.model.yml
+      index: 0
+      firstRowId: 68
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/mkdirp.model.yml
+      index: 0
+      firstRowId: 69
+      rowCount: 2
+      locations:
+        lineNumbers: A=6+1
+        columnNumbers: A=9*2
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/open.model.yml
+      index: 0
+      firstRowId: 71
+      rowCount: 2
+      locations:
+        lineNumbers: A=6+1
+        columnNumbers: A=9*2
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/react-relay-threat.model.yml
+      index: 0
+      firstRowId: 73
+      rowCount: 10
+      locations:
+        lineNumbers: A=6+1*9
+        columnNumbers: A=9*10
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/react.model.yml
+      index: 0
+      firstRowId: 83
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/rimraf.model.yml
+      index: 0
+      firstRowId: 84
+      rowCount: 3
+      locations:
+        lineNumbers: A=6+1*2
+        columnNumbers: A=9*3
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/shelljs.model.yml
+      index: 0
+      firstRowId: 87
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/tanstack.model.yml
+      index: 0
+      firstRowId: 88
+      rowCount: 6
+      locations:
+        lineNumbers: A=6+1*5
+        columnNumbers: A=9*6
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/underscore.string.model.yml
+      index: 0
+      firstRowId: 94
+      rowCount: 5
+      locations:
+        lineNumbers: A=6+1*4
+        columnNumbers: A=9*5
+     -
+      pack: codeql/javascript-all#0
+      relativePath: ext/underscore.string.model.yml
+      index: 1
+      firstRowId: 99
+      rowCount: 20
+      locations:
+        lineNumbers: A=16+1*19
+        columnNumbers: A=9*20
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/NoSQL.model.yml
+      index: 0
+      firstRowId: 119
+      rowCount: 4
+      locations:
+        lineNumbers: A=8+3+1*2
+        columnNumbers: A=9*4
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/NodeJSLib.model.yml
+      index: 0
+      firstRowId: 123
+      rowCount: 5
+      locations:
+        lineNumbers: A=6+1*4
+        columnNumbers: A=9*5
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/SQL.model.yml
+      index: 0
+      firstRowId: 128
+      rowCount: 5
+      locations:
+        lineNumbers: A=6+1*4
+        columnNumbers: A=9*5
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/SQL.model.yml
+      index: 1
+      firstRowId: 133
+      rowCount: 4
+      locations:
+        lineNumbers: A=16+1*3
+        columnNumbers: A=9*4
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/helmet/Helmet.Required.Setting.model.yml
+      index: 0
+      firstRowId: 137
+      rowCount: 2
+      locations:
+        lineNumbers: A=6+1
+        columnNumbers: A=9*2
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/minimongo/model.yml
+      index: 0
+      firstRowId: 139
+      rowCount: 75
+      locations:
+        lineNumbers: A=6+1*74
+        columnNumbers: A=9*75
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mongodb/model.yml
+      index: 0
+      firstRowId: 214
+      rowCount: 26
+      locations:
+        lineNumbers: A=6+1*25
+        columnNumbers: A=9*26
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mongodb/model.yml
+      index: 1
+      firstRowId: 240
+      rowCount: 611
+      locations:
+        lineNumbers: A=37+1*610
+        columnNumbers: A=9*611
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mongodb/model.yml
+      index: 2
+      firstRowId: 851
+      rowCount: 32
+      locations:
+        lineNumbers: A=653+1*31
+        columnNumbers: A=9*32
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mongodb/model.yml
+      index: 3
+      firstRowId: 883
+      rowCount: 102
+      locations:
+        lineNumbers: A=690+1*101
+        columnNumbers: A=9*102
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mssql/model.yml
+      index: 0
+      firstRowId: 985
+      rowCount: 34
+      locations:
+        lineNumbers: A=6+1*33
+        columnNumbers: A=9*34
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mysql/model.yml
+      index: 0
+      firstRowId: 1019
+      rowCount: 57
+      locations:
+        lineNumbers: A=6+1*56
+        columnNumbers: A=9*57
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/mysql/model.yml
+      index: 1
+      firstRowId: 1076
+      rowCount: 3
+      locations:
+        lineNumbers: A=68+1*2
+        columnNumbers: A=9*3
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/pg/model.yml
+      index: 0
+      firstRowId: 1079
+      rowCount: 65
+      locations:
+        lineNumbers: A=6+1*64
+        columnNumbers: A=9*65
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/pg/model.yml
+      index: 1
+      firstRowId: 1144
+      rowCount: 5
+      locations:
+        lineNumbers: A=76+1*4
+        columnNumbers: A=9*5
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/pg/model.yml
+      index: 2
+      firstRowId: 1149
+      rowCount: 23
+      locations:
+        lineNumbers: A=86+1*22
+        columnNumbers: A=9*23
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/sequelize/model.yml
+      index: 0
+      firstRowId: 1172
+      rowCount: 7
+      locations:
+        lineNumbers: A=6+1*6
+        columnNumbers: A=9*7
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/sequelize/model.yml
+      index: 1
+      firstRowId: 1179
+      rowCount: 248
+      locations:
+        lineNumbers: A=18+1*247
+        columnNumbers: A=9*248
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/sequelize/model.yml
+      index: 2
+      firstRowId: 1427
+      rowCount: 5
+      locations:
+        lineNumbers: A=271+1*4
+        columnNumbers: A=9*5
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/sequelize/model.yml
+      index: 3
+      firstRowId: 1432
+      rowCount: 2
+      locations:
+        lineNumbers: A=281+1
+        columnNumbers: A=9*2
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/spanner/model.yml
+      index: 0
+      firstRowId: 1434
+      rowCount: 174
+      locations:
+        lineNumbers: A=6+1*173
+        columnNumbers: A=9*174
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/spanner/model.yml
+      index: 1
+      firstRowId: 1608
+      rowCount: 5
+      locations:
+        lineNumbers: A=185+1*4
+        columnNumbers: A=9*5
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/sqlite3/model.yml
+      index: 0
+      firstRowId: 1613
+      rowCount: 15
+      locations:
+        lineNumbers: A=6+1*14
+        columnNumbers: A=9*15
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/frameworks/sqlite3/model.yml
+      index: 1
+      firstRowId: 1628
+      rowCount: 3
+      locations:
+        lineNumbers: A=26+1*2
+        columnNumbers: A=9*3
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/security/domains/IntegrityCheckingRequired/integrity_checking_required.model.yml
+      index: 0
+      firstRowId: 1631
+      rowCount: 3
+      locations:
+        lineNumbers: A=6+1*2
+        columnNumbers: A=9*3
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/security/domains/compromised/compromised_domains.model.yml
+      index: 0
+      firstRowId: 1634
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/javascript-all#0
+      relativePath: semmle/javascript/security/domains/untrusted/untrusted_domains.model.yml
+      index: 0
+      firstRowId: 1635
+      rowCount: 6
+      locations:
+        lineNumbers: A=7+1+3+1*3
+        columnNumbers: A=9*6
+     -
+      pack: codeql/threat-models#2
+      relativePath: ext/supported-threat-models.model.yml
+      index: 0
+      firstRowId: 1641
+      rowCount: 1
+      locations:
+        lineNumbers: A=6
+        columnNumbers: A=9
+     -
+      pack: codeql/threat-models#2
+      relativePath: ext/threat-model-grouping.model.yml
+      index: 0
+      firstRowId: 1642
+      rowCount: 15
+      locations:
+        lineNumbers: A=8+3+1+3+1*5+3+1+5+1*3
+        columnNumbers: A=9*15
+  codeql/threat-models#2:
+    name: codeql/threat-models
+    version: 1.0.34-dev
+    isLibrary: true
+    isExtensionPack: false
+    localPath: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/shared/threat-models/
+    localPackDefinitionFile: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/shared/threat-models/qlpack.yml
+    runDataExtensions: []
+  codeql/javascript-all#0:
+    name: codeql/javascript-all
+    version: 2.6.14-dev
+    isLibrary: true
+    isExtensionPack: false
+    localPath: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/javascript/ql/lib/
+    localPackDefinitionFile: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/javascript/ql/lib/qlpack.yml
+    runDataExtensions: []
+  codeql/util#3:
+    name: codeql/util
+    version: 2.0.21-dev
+    isLibrary: true
+    isExtensionPack: false
+    localPath: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/shared/util/
+    localPackDefinitionFile: file:///C:/Users/eldar/Documents/College/Programs/CSE%20518/codeql-queries/shared/util/qlpack.yml
+    runDataExtensions: []
