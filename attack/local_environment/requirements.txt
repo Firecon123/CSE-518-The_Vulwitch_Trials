@@ -1,0 +1,2 @@
+-r abuse_firebase_client_api/requirements.txt
+-r abuse_server_api/requirements.txt

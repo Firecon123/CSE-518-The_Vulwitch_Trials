@@ -1,3 +1,23 @@
+diff --git a/firebase-admin.json b/firebase-admin.json
+new file mode 100644
+index 0000000..e2ac718
+--- /dev/null
++++ b/firebase-admin.json
+@@ -0,0 +1,14 @@
++{
++  "type": "service_account",
++  "project_id": "XXXXXX",
++  "private_key_id": "XXXXXXXX",
++  "private_key": "XXXXXXXXXX",
++  "client_email": "XXXXXXXXXXXXX",
++  "client_id": "XXXXXXX",
++  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
++  "token_uri": "https://oauth2.googleapis.com/token",
++  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
++  "client_x509_cert_url": "XXXXXXXXXXXXXXX",
++  "universe_domain": "googleapis.com"
++}
++
 diff --git a/src/app/homePage/page.tsx b/src/app/homePage/page.tsx
 index 9540026..3f69963 100644
 --- a/src/app/homePage/page.tsx
@@ -176,12 +196,12 @@ index fb27ffe..9f94823 100644
 -	storageBucket: "cse418-software-sec.firebasestorage.app",
 -	messagingSenderId: "713113847845",
 -	appId: "1:713113847845:web:2915abd798dbad183b97cc",
-+  apiKey: "AIzaSyAFhHEFZKDXPjpbNYYt7ImhKvHKSdJAjck",
-+  authDomain: "jhbpeterdaili.firebaseapp.com",
-+  projectId: "jhbpeterdaili",
-+  storageBucket: "jhbpeterdaili.firebasestorage.app",
-+  messagingSenderId: "501928159805",
-+  appId: "1:501928159805:web:411f0c6feaa298971ad854"
++  apiKey: "XXXXXXXXXX",
++  authDomain: "XXXXXXXXXXXXX",
++  projectId: "XXXXXXXXXXXXX",
++  storageBucket: "XXXXXXXXX",
++  messagingSenderId: "XXXXXXXXXXX",
++  appId: "XXXXXXXXXXX"
  };
  
  export const firebaseApp = initializeApp(firebaseConfig);
