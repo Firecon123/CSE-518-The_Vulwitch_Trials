@@ -1,0 +1,16 @@
+{
+  "firebase_config": {
+    "apiKey": "XXXXXXXX",
+    "authDomain": "XXXXXXXX",
+    "projectId": "XXXXXXX",
+    "storageBucket": "XXXXXXX",
+    "messagingSenderId": "XXXXXX",
+    "appId": "XXXXXXX",
+    "databaseURL": null
+  },
+  "api_server": "https://linux-server-1.tailf2c50.ts.net:8080",
+  "login_user": {
+    "email": "XXXXXXXXXXXX",
+    "password": "XXXXXXXX"
+  }
+}

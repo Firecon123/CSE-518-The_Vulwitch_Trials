@@ -1,0 +1,4 @@
+# firebase-rest-api
+empyrebase==2.4.0
+pydantic[email]==2.12.3
+requests==2.32.5

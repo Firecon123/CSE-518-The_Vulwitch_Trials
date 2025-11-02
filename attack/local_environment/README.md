@@ -85,7 +85,7 @@ like the following one.
 
 ![local instance](./img/local_instance.png)
 
-Our local instance have some features disabled:
+Our local instance has some features disabled:
 
 1. Our local instance does not send emails containing verification code to users
 when they are logging into the system. Instead, verification code is static and
@@ -95,6 +95,40 @@ always 666666.
 
 ## 2. Vulnerabilities
 
+To use provided Python scripts, you should first install dependencies by
+
+```
+$ cd $HOME/vulwtich
+$ python3 -m venv --prompt cse518-attack .env
+$ source .env/bin/activate
+$ pip install -r attack/local_environment/requirements.txt
+```
+
 ### 2.1 Abusing Firebase client API keys
 
+According to our investigation, it needs to interact with Google's Firebase for
+the most of user actions with the messaging system. And these communications
+are done within browsers. We have found the client API keys used by the system
+as shown by the following picture.
+
+![firebase client api key](./img/firebase_api_keys_processed.png)
+
+With this API key and the credential of an existing user, an attacker could
+retrieve information of all users, send spam messages to other users, and even
+create more accounts.
+
+For example, as a proof of the concept, we have created a script under
+[attack/local\_environment/abuse\_firebase\_client\_api](./abuse_firebase_client_api)
+which uses that API key and shows data of all users.
+
+![show information of all users](./img/abuse_firebase_api_key_processed.png)
+
 ### 2.2 Blocking users from login
+
+We found that we can block a certain user by sending many requests for
+two-factor verification code until a limit is hit. It only needs the id and
+email address of an account, which can be acquired by the previous attack.
+Please refer to [attack/local\_environment/abuse\_server\_api](./abuse_server_api)
+for more details.
+
+![block user](./img/block_user.png)
