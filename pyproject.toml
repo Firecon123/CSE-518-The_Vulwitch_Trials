@@ -28,6 +28,7 @@ dependencies = [
   "xdsl == 0.52.0",
   "lit == 18.1.8",
   "typing-extensions == 4.15.0",
+  "pycparser == 2.23",
 ]
 classifiers = [
   "Programming Language :: Python :: 3",
