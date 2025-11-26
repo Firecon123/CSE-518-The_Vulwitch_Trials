@@ -1,0 +1,74 @@
+rules:
+  - id: unsafe function gets
+    pattern: >
+      (FuncCall
+        name: (ID name: (#eq "gets")))
+    message: >-
+      Function `gets` is unsafe.
+      Please consider using `fgets` instead.
+      Refer to CWE-242: Use of Inherently Dangerous Function.
+    severity: HIGH
+    confidence: HIGH
+  - id: unsafe function strcpy
+    pattern: >
+      (FuncCall
+        name: (ID name: (#eq "strcpy")))
+    message: >-
+      Function `strcpy` is unsafe.
+      Please consider using `strlcpy` instead.
+      Refer to CWE-676: Use of Potentially Dangerous Function.
+    severity: HIGH
+    confidence: HIGH
+  - id: unsafe function strcat
+    pattern: >
+      (FuncCall
+        name: (ID name: (#eq "strcat")))
+    message: >-
+      Function `strcat` is unsafe.
+      Refer to CWE-676: Use of Potentially Dangerous Function.
+    severity: HIGH
+    confidence: HIGH
+  - id: assignments in logical operations
+    pattern: >
+      (#any
+        (BinaryOp
+          op: (#any (#eq "&&") (#eq "||"))
+          lhs: (Assignment))
+        (BinaryOp
+          op: (#any (#eq "&&") (#eq "||"))
+          rhs: (Assignment)))
+    message: >-
+      Assignment used in conditional expression (
+      possible error: use '==' for comparison?)
+    severity: LOW
+    confidence: LOW
+  - id: dangerous function system
+    pattern: >
+      (FuncCall
+        name: (ID name: (#eq "system")))
+    message: >-
+      Please consider not using the function `system` as it might be exploited
+      to run any shell command, and use `execve` instead. Refer to CERT C Secure
+      Coding MSC30-C.
+    severity: LOW
+    confidence: HIGH
+  - id: dangerous function popen
+    pattern: >
+      (FuncCall
+        name: (ID name: (#eq "popen")))
+    message: >-
+      Please consider not using the function `popen` as it might be exploited
+      to run any shell command, and use `pipe` and `execve` instead. Refer to
+      CERT C Secure Coding MSC30-C.
+    severity: LOW
+    confidence: HIGH
+  - id:  function rand
+    pattern: >
+      (FuncCall
+        name: (ID name: (#eq "rand")))
+    message: >-
+      Consider not using the function `rand` as it makes no guarantees as to the
+      quality of the random sequence produced. Refer to CERT C Secure Coding
+      MSC30-C.
+    severity: LOW
+    confidence: HIGH

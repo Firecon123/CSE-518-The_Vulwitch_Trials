@@ -6,78 +6,78 @@ from vul_witch.ast.location import CodeRange
 
 
 @dataclass(frozen=True)
-class AstNode:
+class AstNodeBase:
     code_range: CodeRange
 
 
 @dataclass(frozen=True)
-class TranslationUnit(AstNode):
-    nodes: Sequence[AstNode]
+class TranslationUnit(AstNodeBase):
+    nodes: Sequence[AstNodeBase]
     pass
 
 
 @dataclass(frozen=True)
-class StringLiteral(AstNode):
-    literal: str
-
-
-@dataclass(frozen=True)
-class Identifier(AstNode):
+class Identifier(AstNodeBase):
     name: str
 
 
 @dataclass(frozen=True)
-class ExternalDeclaration(AstNode):
+class ExternalDeclarationBase(AstNodeBase):
     pass
 
 
 @dataclass(frozen=True)
-class Declaration(ExternalDeclaration):
+class DeclarationBase(ExternalDeclarationBase):
+    pass
+
+
+@dataclass(frozen=True)
+class ConcreteDeclaration(DeclarationBase):
     specifiers: Sequence["DeclarationSpecifierBase"]
     init_declarators: Optional[Sequence["DeclaratorBase"]]
 
 
 @dataclass(frozen=True)
-class StaticAssert(AstNode):
+class StaticAssert(DeclarationBase):
     expression: "ExpressionBase"
-    message: StringLiteral
+    message: "StringLiteral"
 
 
 @dataclass(frozen=True)
-class FunctionDefinition(ExternalDeclaration):
+class FunctionDefinition(ExternalDeclarationBase):
+    specifiers: Sequence["DeclarationSpecifierBase"]
+    declarator: "DeclaratorBase"
+    compound_statement: "CompoundStatement"
+
+
+@dataclass(frozen=True)
+class PreprocessNodeBase(AstNodeBase):
     pass
 
 
-@dataclass(frozen=True)
-class StaticAssertDeclaration(ExternalDeclaration):
-    static_assert: StaticAssert
+TopLevelType = PreprocessNodeBase | ExternalDeclarationBase
 
 
 @dataclass(frozen=True)
-class PreprocessNode(AstNode):
-    pass
-
-
-@dataclass(frozen=True)
-class DefineDirective(PreprocessNode):
+class DefineDirective(PreprocessNodeBase):
     identifier: str
     replacement: Optional[str]
 
 
 @dataclass(frozen=True)
-class FunctionDefineDirective(PreprocessNode):
+class FunctionDefineDirective(PreprocessNodeBase):
     identifier: str
     params: Sequence[str]
     replacement: Optional[str]
 
 
 @dataclass(frozen=True)
-class UndefineDirective(PreprocessNode):
+class UndefineDirective(PreprocessNodeBase):
     identifier: str
 
 
 @dataclass(frozen=True)
-class PreprocessExpression(PreprocessNode):
+class PreprocessExpression(PreprocessNodeBase):
     pass
 
 
@@ -116,17 +116,17 @@ class PreprocessUnaryExpression(PreprocessExpression):
     operand: PreprocessExpression
 
 
-class PreprocessBinaryOperator(Enum):
+class BinaryOperator(Enum):
     Add = "+"
     Sub = "-"
     Mul = "*"
     Div = "/"
     Mod = "%"
-    ShortOr = "||"
-    ShortAnd = "&&"
-    Or = "|"
+    LogicalOr = "||"
+    LogicalAnd = "&&"
+    BitwiseOr = "|"
     Xor = "^"
-    And = "&"
+    BitwiseAnd = "&"
     Equal = "=="
     NotEqual = "!="
     Greater = ">"
@@ -139,7 +139,7 @@ class PreprocessBinaryOperator(Enum):
 
 @dataclass(frozen=True)
 class PreprocessBinaryExpression(PreprocessExpression):
-    operator: PreprocessBinaryOperator
+    operator: BinaryOperator
     lhs: PreprocessExpression
     rhs: PreprocessExpression
 
@@ -154,11 +154,11 @@ class IncludeTargetType(Enum):
     SystemLibString = "system_lib_string"
     StringLiteral = "string_literal"
     Identifier = "identifier"
-    CallExpression = "preproc_call_expression"
+    CallExpression = "call_expression"
 
 
 @dataclass(frozen=True)
-class IncludeDirective(PreprocessNode):
+class IncludeDirective(PreprocessNodeBase):
     type_: IncludeTargetType
     target: str | PreprocessCallExpression
 
@@ -184,8 +184,8 @@ class IncludeDirective(PreprocessNode):
 
 
 @dataclass(frozen=True)
-class DirectiveWithOptionalGroup(PreprocessNode):
-    group: Optional[Sequence[AstNode]]
+class DirectiveWithOptionalGroup(PreprocessNodeBase):
+    group: Optional[Sequence[AstNodeBase]]
 
 
 @dataclass(frozen=True)
@@ -219,12 +219,12 @@ class ElseDirective(DirectiveWithOptionalGroup):
 
 
 @dataclass(frozen=True)
-class EndIfDirective(PreprocessNode):
+class EndIfDirective(PreprocessNodeBase):
     pass
 
 
 @dataclass(frozen=True)
-class IfSectionDirective(PreprocessNode):
+class IfSectionDirective(PreprocessNodeBase):
     if_group: IfGroupDirective
     elif_groups: Optional[Sequence[ElifDirective]]
     else_group: Optional[ElseDirective]
@@ -232,27 +232,27 @@ class IfSectionDirective(PreprocessNode):
 
 
 @dataclass(frozen=True)
-class LineDirective(PreprocessNode):
+class LineDirective(PreprocessNodeBase):
     raw_directive: str
 
 
 @dataclass(frozen=True)
-class ErrorDirective(PreprocessNode):
+class ErrorDirective(PreprocessNodeBase):
     message: Optional[str]
 
 
 @dataclass(frozen=True)
-class PragmaDirective(PreprocessNode):
+class PragmaDirective(PreprocessNodeBase):
     raw_directive: Optional[str]
 
 
 @dataclass(frozen=True)
-class EmptyDirective(PreprocessNode):
+class EmptyDirective(PreprocessNodeBase):
     pass
 
 
 @dataclass(frozen=True)
-class DeclarationSpecifierBase(AstNode):
+class DeclarationSpecifierBase(AstNodeBase):
     pass
 
 
@@ -307,7 +307,7 @@ class StructOrUnionSpecifier(TypeSpecifier):
 
 
 @dataclass(frozen=True)
-class StructDeclarationBase(AstNode):
+class StructDeclarationBase(AstNodeBase):
     pass
 
 
@@ -319,7 +319,7 @@ class StructField(StructDeclarationBase):
 
 
 @dataclass(frozen=True)
-class StructDeclarator(AstNode):
+class StructDeclarator(AstNodeBase):
     declarator: "DeclaratorBase"
     bit_width: Optional["ExpressionBase"]
 
@@ -346,11 +346,11 @@ class MacroFunctionDefStructDeclaration(MacroStructDeclarationBase):
 
 @dataclass(frozen=True)
 class MacroDirectiveStructDeclaration(MacroStructDeclarationBase):
-    call: PreprocessNode
+    call: PreprocessNodeBase
 
 
 @dataclass(frozen=True)
-class MacroStructDeclarationGroupBase(AstNode):
+class MacroStructDeclarationGroupBase(AstNodeBase):
     declarations: Optional[Sequence[StructDeclarationBase]]
 
 
@@ -390,7 +390,7 @@ class EnumSpecifier(TypeSpecifier):
 
 
 @dataclass(frozen=True)
-class EnumeratorBase(AstNode):
+class EnumeratorBase(AstNodeBase):
     pass
 
 
@@ -401,7 +401,7 @@ class Enumerator(EnumeratorBase):
 
 
 @dataclass(frozen=True)
-class MacroEnumeratorGroupBase(AstNode):
+class MacroEnumeratorGroupBase(AstNodeBase):
     enumerators: Optional[Sequence[Enumerator]]
 
 
@@ -435,7 +435,7 @@ class MacroEnumeratorList(EnumeratorBase):
 
 @dataclass(frozen=True)
 class MacroDirectiveEnumerator(EnumeratorBase):
-    call: PreprocessNode
+    call: PreprocessNodeBase
 
 
 @dataclass(frozen=True)
@@ -471,7 +471,7 @@ class TypeQualifier(DeclarationSpecifierBase):
 
 
 @dataclass(frozen=True)
-class AbstractDeclaratorBase(AstNode):
+class AbstractDeclaratorBase(AstNodeBase):
     pass
 
 
@@ -494,11 +494,6 @@ class AbstractArrayDeclarator(AbstractDeclaratorBase):
     array_size: "ArraySize"
 
 
-@dataclass(frozen=True)
-class AbstractParenthesizedDeclarator(AbstractDeclaratorBase):
-    declarator: AbstractDeclaratorBase
-
-
 class ArraySizeKind(Enum):
     Unknown = auto()  # []
     VariableUnknown = auto()  # [*]
@@ -507,27 +502,27 @@ class ArraySizeKind(Enum):
 
 
 @dataclass(frozen=True)
-class ArraySize(AstNode):
+class ArraySize(AstNodeBase):
     kind: ArraySizeKind
     type_qualifiers: Optional[Sequence[TypeQualifier]]
     expression: Optional["ExpressionBase"]
 
 
 @dataclass(frozen=True)
-class ParameterDeclaration(AstNode):
+class ParameterDeclaration(AstNodeBase):
     specifiers: Sequence[DeclarationSpecifierBase]
     declarator: "DeclaratorBase" | Optional[AbstractDeclaratorBase]
     attribute_list: Optional[Sequence["Attribute"]]
 
 
 @dataclass(frozen=True)
-class TypeName(AstNode):
+class TypeName(AstNodeBase):
     specifier_qualifier_list: Sequence[TypeSpecifier | TypeQualifier]
     declarator: Optional[AbstractDeclaratorBase]
 
 
 @dataclass(frozen=True)
-class DeclaratorBase(AstNode):
+class DeclaratorBase(AstNodeBase):
     pass
 
 
@@ -556,18 +551,13 @@ class ArrayDeclarator(DeclaratorBase):
 
 
 @dataclass(frozen=True)
-class ParenthesizedDeclarator(DeclaratorBase):
-    declarator: DeclaratorBase
-
-
-@dataclass(frozen=True)
 class InitDeclarator(DeclaratorBase):
     declarator: "DeclaratorBase"
     initializer: "InitializerBase"
 
 
 @dataclass(frozen=True)
-class InitializerBase(AstNode):
+class InitializerBase(AstNodeBase):
     pass
 
 
@@ -582,13 +572,13 @@ class InitializerList(InitializerBase):
 
 
 @dataclass(frozen=True)
-class InitializerListItem(AstNode):
+class InitializerListItem(AstNodeBase):
     designators: Optional[Sequence["DesignatorBase"]]
     initializer: InitializerBase
 
 
 @dataclass(frozen=True)
-class DesignatorBase(AstNode):
+class DesignatorBase(AstNodeBase):
     pass
 
 
@@ -643,8 +633,82 @@ class ExtendedDeclarationSpecifier(DeclarationSpecifierBase):
 
 
 @dataclass(frozen=True)
-class ExpressionBase(AstNode):
+class ExpressionBase(AstNodeBase):
     pass
+
+
+@dataclass(frozen=True)
+class StringLiteral(ExpressionBase):
+    literal: str
+
+
+class ConstantKind(Enum):
+    Integer = auto()
+    Float = auto()
+    Character = auto()
+
+
+@dataclass(frozen=True)
+class Constant(ExpressionBase):
+    kind: ConstantKind
+    value: str
+
+
+@dataclass(frozen=True)
+class BinaryExpression(ExpressionBase):
+    operator: BinaryOperator
+    lhs: ExpressionBase
+    rhs: ExpressionBase
+
+
+@dataclass(frozen=True)
+class GenericAssociation(AstNodeBase):
+    type_name: TypeName
+    expression: ExpressionBase
+
+
+@dataclass(frozen=True)
+class GenericSelection(ExpressionBase):
+    # C11 6.5.1.1 Generic selection
+    expression: ExpressionBase
+    association_list: Optional[Sequence[GenericAssociation]]
+    default: ExpressionBase
+
+
+@dataclass(frozen=True)
+class ConditionalExpression(ExpressionBase):
+    # C11 6.5.15 Conditional operator
+    condition: ExpressionBase
+    first: ExpressionBase
+    second: ExpressionBase
+
+
+@dataclass(frozen=True)
+class CommaExpression(ExpressionBase):
+    # C11 6.5.17 Comma operator
+    expressions: Sequence[ExpressionBase]
+
+
+class AssignmentOperator(Enum):
+    Assign = "="
+    AssignMul = "*="
+    AssignDiv = "/="
+    AssignMod = "%="
+    AssignAdd = "+="
+    AssignSub = "-="
+    AssignLeftShift = "<<="
+    AssignRightShift = ">>="
+    AsiggnBitwiseAnd = "&="
+    AsiggnBitwiseXor = "^="
+    AsiggnBitwiseOr = "|="
+
+
+@dataclass(frozen=True)
+class AssignmentExpression(ExpressionBase):
+    # C11 6.5.16 Assignment operators
+    operator: AssignmentOperator
+    lhs: ExpressionBase
+    rhs: ExpressionBase
 
 
 @dataclass(frozen=True)
@@ -659,7 +723,67 @@ class IdentifierExpression(ExpressionBase):
 
 
 @dataclass(frozen=True)
-class ExtensionBase(AstNode):
+class CallExpression(ExpressionBase):
+    # C11 6.5.2 Postfix operators
+    callee: ExpressionBase
+    arguments: Optional[Sequence[ExpressionBase]]
+
+
+class MemberExpressionKind(Enum):
+    Direct = auto()
+    Indirect = auto()
+
+
+@dataclass(frozen=True)
+class MemberExpression(ExpressionBase):
+    kind: MemberExpressionKind
+    object_: ExpressionBase
+    field: Identifier
+
+
+@dataclass(frozen=True)
+class SubscriptExpression(ExpressionBase):
+    # 6.5.2.1 Array subscripting
+    object_: ExpressionBase
+    subscript: ExpressionBase
+
+
+@dataclass(frozen=True)
+class StatementExpression(ExpressionBase):
+     # GCC supports using a compound statement as an expression if the
+     # statement is wrapped inside an pair of parentheses. For example,
+     #
+     # ({ int y = foo (); int z;
+     #    if (y > 0) z = y;
+     #    else z = - y;
+     #    z; })
+     #
+     # See https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
+     statement: "CompoundStatement"
+
+
+class UnaryOperator(Enum):
+    # C11 6.5.3 Unary operators
+    PostIncrement = auto()
+    PostDecrement = auto()
+    PreIncrement = auto()
+    PreDecrement = auto()
+    Address = auto()
+    Deference = auto()
+    Plus = auto()
+    Minus = auto()
+    Complement = auto()
+    LogicalNegate = auto()
+
+
+@dataclass(frozen=True)
+class UnaryExpression(ExpressionBase):
+    operator: UnaryOperator
+    expression: ExpressionBase
+
+
+@dataclass(frozen=True)
+class ExtensionBase(AstNodeBase):
     pass
 
 
@@ -673,3 +797,110 @@ class Attribute(ExtensionBase):
 class AsmLabel(ExtensionBase):
     # See https://gcc.gnu.org/onlinedocs/gcc/Asm-Labels.html
     string_literal: str
+
+
+@dataclass(frozen=True)
+class StatementBase(AstNodeBase):
+    pass
+
+
+@dataclass(frozen=True)
+class ExpressionStatement(StatementBase):
+    # C11 6.8.3 Expression and null statements
+    expression: Optional[ExpressionBase]
+
+
+@dataclass(frozen=True)
+class LabeledStatementBase(StatementBase):
+    # C11 6.8.1 Labeled statements
+    pass
+
+@dataclass(frozen=True)
+class IdentifierLabeledStatement(LabeledStatementBase):
+    idenfier: Identifier
+    statement: StatementBase
+
+
+@dataclass(frozen=True)
+class CaseStatement(LabeledStatementBase):
+    condition: ExpressionBase
+    statement: StatementBase
+
+@dataclass(frozen=True)
+class DefaultStatement(LabeledStatementBase):
+    statement: StatementBase
+
+
+@dataclass(frozen=True)
+class IfStatement(StatementBase):
+    # C11 6.8.4.1 The if statement
+    condition: ExpressionBase
+    first: StatementBase
+    second: Optional[StatementBase]
+
+
+@dataclass(frozen=True)
+class SwitchStatemen(StatementBase):
+    # C11 6.8.4.2 The switch statement
+    condition: ExpressionBase
+    statemen: StatementBase
+
+
+@dataclass(frozen=True)
+class WhileStatement(StatementBase):
+    # C11 6.8.5.1 The while statement
+    condition: ExpressionBase
+    body : StatementBase
+
+
+@dataclass(frozen=True)
+class DoWhileStatement(StatementBase):
+    # C11 6.8.5.2 The do statement
+    condition: ExpressionBase
+    body: StatementBase
+
+
+@dataclass(frozen=True)
+class ForStatement(StatementBase):
+    # C11 6.8.5.3 The forstatement
+    initializer: DeclarationBase | ExpressionBase
+    condition: ExpressionBase
+    step: ExpressionBase
+    body: StatementBase
+
+
+CompoundStatementItemType = StatementBase | DeclarationBase | PreprocessNodeBase
+
+
+@dataclass(frozen=True)
+class CompoundStatement(StatementBase):
+    items: Sequence[CompoundStatementItemType]
+
+
+@dataclass(frozen=True)
+class ExpressionStatment(StatementBase):
+    expression: Optional[ExpressionBase]
+
+
+@dataclass(frozen=True)
+class GotoStatement(StatementBase):
+    # C11 6.8.6.1 The goto statement
+    identifier: Identifier
+
+
+@dataclass(frozen=True)
+class ContinueStatement(StatementBase):
+    # C11 6.8.6.2 The continue statement
+    pass
+
+
+@dataclass(frozen=True)
+class BreakStatement(StatementBase):
+    # C11 6.8.6.3 The break statement
+    pass
+
+
+@dataclass(frozen=True)
+class ReturnStatement(StatementBase):
+    # C11 6.8.6.4 The return statement
+    expression: Optional[ExpressionBase]
