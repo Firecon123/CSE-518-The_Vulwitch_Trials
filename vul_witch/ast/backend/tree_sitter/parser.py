@@ -13,7 +13,7 @@ from vul_witch.ast import node
 from vul_witch.ast.backend.tree_sitter.utils import TreeSitterHelper
 from vul_witch.ast.error import CodeError, unreachable
 from vul_witch.ast.location import CodeLocation, CodeRange
-from vul_witch.ast.node import AstNode, TranslationUnit
+from vul_witch.ast.node import ExpressionBase, TranslationUnit
 from vul_witch.ast.parser import CParserInterface
 
 
@@ -224,22 +224,22 @@ class TreeSitterCParser(CParserInterface):
     def _try_fix_error(self) -> bool:
         raise NotImplementedError()
 
-    def _parse_node(self) -> AstNode:
+    def _parse_node(self) -> ExpressionBase:
         raise NotImplementedError()
 
     def _create_code_error(self, err_msg: str) -> CodeError:
-        return CodeError(err_msg, self._get_current_code_range())
+        return CodeError(err_msg, self._get_code_range())
 
     @override
     def parse_module(self) -> TranslationUnit:
         tu = self._cursor.node
         assert tu is not None and tu.type == "translation_unit"
-        tu_code_range = self._get_current_code_range()
+        tu_code_range = self._get_code_range()
 
         if self._cursor.node is None:
             return TranslationUnit(tu_code_range, [])
 
-        self._cursor.goto_first_child()
+        self._goto_first_child()
         nodes = []
         while True:
             if self._has_error() and not self._try_fix_error():
@@ -247,7 +247,7 @@ class TreeSitterCParser(CParserInterface):
             if not self._should_skip():
                 nodes.append(self._parse_top_level_ast_node())
 
-            if not self._cursor.goto_next_sibling():
+            if not self._goto_next_sibling():
                 break
 
         return TranslationUnit(tu_code_range, nodes)
@@ -267,13 +267,30 @@ class TreeSitterCParser(CParserInterface):
         assert parent is not None
         return parent.child_count
 
-    def _get_current_code_range(self) -> CodeRange:
+    def _goto_next_sibling(self) -> bool:
+        return self._cursor.goto_next_sibling()
+
+    def _goto_first_child(self) -> bool:
+        return self._cursor.goto_first_child()
+
+    def _goto_last_child(self) -> bool:
+        return self._cursor.goto_last_child()
+
+    def _goto_parent_then_next_sibling(self) -> bool:
+        res = self._cursor.goto_parent()
+        res = res and self._cursor.goto_next_sibling()
+        return res
+
+    def _goto_parent(self) -> None:
+        self._cursor.goto_parent()
+
+    def _get_code_range(self) -> CodeRange:
         return TreeSitterHelper.from_ts_node(self._source_file, self._cursor)
 
-    def _get_current_code_start(self) -> CodeLocation:
+    def _get_code_start(self) -> CodeLocation:
         return TreeSitterHelper.from_ts_node_start(self._cursor)
 
-    def _get_current_code_end(self) -> CodeLocation:
+    def _get_code_end(self) -> CodeLocation:
         return TreeSitterHelper.from_ts_node_end(self._cursor)
 
     def _should_skip(self) -> bool:
@@ -282,7 +299,7 @@ class TreeSitterCParser(CParserInterface):
             "comment",
         )
 
-    def _parse_top_level_ast_node(self) -> AstNode:
+    def _parse_top_level_ast_node(self) -> node.TopLevelType:
         ast_node = self._try_parse_top_level_ast_node()
         if ast_node is None:
             assert self._cursor.node is not None
@@ -291,7 +308,9 @@ class TreeSitterCParser(CParserInterface):
             )
         return ast_node
 
-    def _try_parse_top_level_ast_node(self) -> Optional[AstNode]:
+    def _try_parse_top_level_ast_node(
+        self,
+    ) -> Optional[node.TopLevelType]:
         if self._is_top_level_preprocess_directive():
             return self._parse_top_level_preprocess_directive()
         elif self._is_top_level_c_ordinary_node():
@@ -315,13 +334,103 @@ class TreeSitterCParser(CParserInterface):
             TreeSitterTopLevelCNodeType.FunctionDefinition.value,
         )
 
-    def _parse_c_function_definition(self):
+    def _is_tree_sitter_case_statement(self) -> bool:
+        return self._is_node_type(node_type="case_statement")
+
+    def _is_tree_sitter_attributed_statement(self) -> bool:
+        return self._is_node_type(node_type="attributed_statement")
+
+    def _consume_tree_sitter_attributed_statement(self) -> node.StatementBase:
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5812-L5827
         raise NotImplementedError()
 
-    def _parse_c_type_definition(self) -> node.Declaration:
+    def _is_tree_sitter_labeld_statement(self) -> bool:
+        return self._is_node_type(node_type="labeled_statement")
+
+    def _consume_tree_sitter_labeled_statement(
+        self,
+    ) -> node.LabeledStatementBase:
         raise NotImplementedError()
 
-    def _parse_top_level_c_node(self) -> AstNode:
+    def _is_tree_sitter_statement(self) -> bool:
+        # For `statement`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5828-L5840
+        return (
+            self._is_tree_sitter_case_statement() or
+            self._is_tree_sitter_labeld_statement()
+        )
+
+    def _consume_tree_sitter_statement(self) -> node.StatementBase:
+        raise NotImplementedError()
+
+    def _is_tree_sitter_compound_statement(self) -> bool:
+        return self._is_node_type(node_type="compound_statement")
+
+    def _consume_tree_sitter_compound_statement(
+        self,
+    ) -> node.CompoundStatement:
+        assert self._is_tree_sitter_compound_statement()
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        self._consume_left_brace()
+        items: List[node.CompoundStatementItemType] = []
+        if self._is_top_level_preprocess_directive():
+            items.append(
+                self._parse_top_level_preprocess_directive(),
+            )
+            self._goto_next_sibling()
+        elif self._is_c_declaration():
+            items.append(
+                self._consume_c_declaration(),
+            )
+        elif self._is_tree_sitter_statement():
+            items.append(
+                self._consume_tree_sitter_statement(),
+            )
+        else:
+            raise self._create_code_error("unsupported compound statement")
+        self._consume_right_brace()
+
+        self._goto_parent_then_next_sibling()
+        return node.CompoundStatement(code_range, items)
+
+    def _parse_krc_style_function_definition(self) -> node.FunctionDefinition:
+        # A K&R C style function definition is as follows:
+        #
+        # int foo(s, f, b)
+        #   char* s;
+        #   float f;
+        #   struct Baz * b;
+        # {
+        #   return 5;
+        # }
+        #
+        # The above example is from https://jameshfisher.com/2016/11/27/c-k-and-r/
+        raise NotImplementedError()
+
+    def _parse_c_function_definition(self) -> node.FunctionDefinition:
+        # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L2779-L2827
+        # Also see C11 6.9.1 Function definitions
+        assert self._is_tree_sitter_function_definition()
+        code_range = self._get_code_range()
+        child_count = self._get_child_count()
+        self._goto_first_child()
+
+        self._raise_if_ms_based_modifier()
+        specifiers = self._consume_c_declaration_specifiers(child_count)
+        self._raise_if_ms_based_modifier()
+        declarator = self._consume_tree_sitter_declarator()
+        compound_statement = self._consume_tree_sitter_compound_statement()
+
+        self._goto_parent()
+        return node.FunctionDefinition(
+            code_range, specifiers, declarator, compound_statement,
+        )
+
+    def _parse_c_type_definition(self) -> node.ConcreteDeclaration:
+        raise NotImplementedError()
+
+    def _parse_top_level_c_node(self) -> node.ExternalDeclarationBase:
         if self._is_c_declaration():
             return self._parse_c_declaration()
         elif self._is_tree_sitter_type_definition():
@@ -359,7 +468,7 @@ class TreeSitterCParser(CParserInterface):
             return False
 
     def _consume_c_storage_class_specifier(self) -> node.StorageClassSpecifier:
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
 
         specifier = self._get_first_child().type
         kind: node.StorageClassSpecifierKind
@@ -379,7 +488,7 @@ class TreeSitterCParser(CParserInterface):
         else:
             unreachable()
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return node.StorageClassSpecifier(code_range, kind)
 
     def _is_c_type_qualifier(self) -> bool:
@@ -399,7 +508,7 @@ class TreeSitterCParser(CParserInterface):
         )
 
     def _consume_c_type_qualifier(self) -> node.TypeQualifier:
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         qualifier = self._get_first_child().type
 
         kind: node.TypeQualifierKind
@@ -421,7 +530,7 @@ class TreeSitterCParser(CParserInterface):
                 f"unsupported type qualifier {qualifier}"
             )
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return node.TypeQualifier(code_range, kind)
 
     def _is_c_struct_or_union_specifier(self) -> bool:
@@ -459,7 +568,7 @@ class TreeSitterCParser(CParserInterface):
         self
     ) -> node.Identifier:
         assert self._is_tree_sitter_type_identifier()
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
 
         name = self._consume_raw_content()
 
@@ -485,13 +594,12 @@ class TreeSitterCParser(CParserInterface):
         return self._is_node_type(node_type="bitfield_clause")
 
     def _consume_c_bitfield_caluse(self) -> node.ExpressionBase:
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         self._consume_colon()
-        exp = self._consume_c_expression()
+        exp = self._consume_tree_sitter_expression()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return exp
 
     def _consume_c_struct_declarator(self) -> node.StructDeclarator:
@@ -510,8 +618,8 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_c_struct_field_declaration(self) -> node.StructField:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5475-L5511
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         type_specs = self._consume_c_type_specifier_qualifier_list(
             at_most=self._get_sibling_count(),
@@ -528,8 +636,7 @@ class TreeSitterCParser(CParserInterface):
         )
         self._consume_semicolon()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.StructField(code_range, type_specs, declarators, attribute)
 
     def _is_preproc_if_field_declaration_list(self) -> bool:
@@ -546,7 +653,7 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.MacroStructDeclarationIfGroup:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L724-L813
-        code_start = self._get_current_code_start()
+        code_start = self._get_code_start()
         self._consume_node_with_type(node_type="#if")
         condition = self._consume_preprocess_expression()
         self._consume_new_line()
@@ -567,9 +674,9 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.MacroStructDeclarationIfdefGroup:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L814-L913
-        code_start = self._get_current_code_start()
+        code_start = self._get_code_start()
         is_ifndef = self._is_node_type(node_type="#ifndef")
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         identifier = self._consume_c_identifier()
         declarations = []
         while self._is_tree_sitter_field_declaration():
@@ -593,8 +700,8 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.MacroStructDeclarationElifGroup:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L939-L1019
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#elif")
         condition = self._consume_preprocess_expression()
@@ -604,8 +711,7 @@ class TreeSitterCParser(CParserInterface):
         while self._is_tree_sitter_field_declaration():
             declarations.append(self._consume_tree_sitter_field_declaration())
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroStructDeclarationElifGroup(
             code_range, declarations if declarations else None, condition,
         )
@@ -624,16 +730,15 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.MacroStructDeclarationElseGroup:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L914-L938
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#else")
         declarations = []
         while self._is_tree_sitter_field_declaration():
             declarations.append(self._consume_tree_sitter_field_declaration())
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroStructDeclarationElseGroup(
             code_range, declarations if declarations else None,
         )
@@ -642,7 +747,7 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.MacroConditionalStructDeclaration:
         is_ifdef = self._is_preproc_ifdef_field_declaration_list()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         if_group = (
             self._consume_preproc_field_declaratin_ifdef_group()
@@ -666,11 +771,10 @@ class TreeSitterCParser(CParserInterface):
             self._consume_preproc_else_field_declaration_list()
             if self._is_preproc_else_field_declaration_list() else None
         )
-        code_end = self._get_current_code_end()
+        code_end = self._get_code_end()
         self._consume_node_with_type(node_type="#endif")
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroConditionalStructDeclaration(
             CodeRange(self._source_file, if_group.code_range.start, code_end),
             if_group, elif_groups if elif_groups else None, else_group,
@@ -694,17 +798,17 @@ class TreeSitterCParser(CParserInterface):
             return self._consume_c_struct_field_declaration()
         elif self._is_preprocess_define():
             define = self._parse_preprocess_define()
-            self._cursor.goto_next_sibling()
+            self._goto_next_sibling()
             return node.MacroDefStructDeclaration(define.code_range, define)
         elif self._is_preprocess_function_define():
             function_define = self._parse_preprocess_function_define()
-            self._cursor.goto_next_sibling()
+            self._goto_next_sibling()
             return node.MacroFunctionDefStructDeclaration(
                 function_define.code_range, function_define,
             )
         elif self._is_preprocess_call():
             directive = self._parse_preprocess_call()
-            self._cursor.goto_next_sibling()
+            self._goto_next_sibling()
             return node.MacroDirectiveStructDeclaration(
                 directive.code_range, directive,
             )
@@ -722,7 +826,7 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> Sequence[node.StructDeclarationBase]:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5416-L5435
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         self._consume_left_brace()
         declarations = []
@@ -730,16 +834,15 @@ class TreeSitterCParser(CParserInterface):
             declarations.append(self._consume_tree_sitter_field_declaration())
         self._consume_right_brace()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return declarations
 
     def _consume_c_struct_or_union_specifier(
         self,
     ) -> node.StructOrUnionSpecifier:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5246-L5415
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         is_struct = True
         if self._is_node_type(
@@ -766,8 +869,7 @@ class TreeSitterCParser(CParserInterface):
                 f"{'struct' if is_struct else 'union'} are empty"
             )
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.StructOrUnionSpecifier(
             code_range, is_struct, id_, declarations,
         )
@@ -780,16 +882,15 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_tree_sitter_enumerator(self) -> node.Enumerator:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5592-L5629
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         identifier = self._consume_c_identifier()
         expression = None
         if self._is_equal_sign():
-            expression = self._consume_c_expression()
+            expression = self._consume_tree_sitter_expression()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.Enumerator(code_range, identifier, expression)
 
     def _is_tree_sitter_preproc_if_enumerator(self) -> bool:
@@ -819,8 +920,8 @@ class TreeSitterCParser(CParserInterface):
     ) -> node.MacroEnumeratorElseGroup:
         # For `preproc_else_in_enumerator_list`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1319-L1352
         # For `preproc_else_in_enumerator_list_no_comma`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1733-L1757
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#else")
         count = self._get_sibling_count() - 1
@@ -832,8 +933,7 @@ class TreeSitterCParser(CParserInterface):
                 assert self._is_comma()
                 self._consume_comma()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroEnumeratorElseGroup(
             code_range,
             enumerators if enumerators else None,
@@ -850,8 +950,8 @@ class TreeSitterCParser(CParserInterface):
     ) -> node.MacroEnumeratorElifGroup:
         # For `preproc_elif_in_enumerator_list`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1353-L1442
         # For `preproc_elif_in_enumerator_list_no_comma`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1758-L1838
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#elif")
         condition = self._consume_preprocess_expression()
@@ -862,8 +962,7 @@ class TreeSitterCParser(CParserInterface):
             if self._is_comma():
                 self._consume_comma()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroEnumeratorElifGroup(
             code_range,
             enumerators if enumerators else None,
@@ -881,14 +980,14 @@ class TreeSitterCParser(CParserInterface):
     ) -> node.MacroEnumeratorList:
         # For `preproc_if_in_enumerator_list`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1111-L1209
         # For `preproc_if_in_enumerator_list_no_comma`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1543-L1632
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
-        if_code_start = self._get_current_code_start()
+        if_code_start = self._get_code_start()
         is_ifndef = False
         if is_ifdef:
             is_ifndef = self._is_node_type(node_type="#ifndef")
-            self._cursor.goto_next_sibling()
+            self._goto_next_sibling()
             if_condition_or_id = self._consume_c_identifier()
         else:
             self._consume_node_with_type(node_type="#if")
@@ -941,8 +1040,7 @@ class TreeSitterCParser(CParserInterface):
 
         self._consume_node_with_type(node_type="#endif")
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroEnumeratorList(
             code_range,
             if_group,
@@ -950,16 +1048,11 @@ class TreeSitterCParser(CParserInterface):
             else_group,
         )
 
-    # def _consume_tree_sitter_preproc_ifdef_enumerator(
-    #     self,
-    # ) -> node.MacroEnumeratorList:
-    #     raise NotImplementedError()
-
     def _consume_tree_sitter_preproc_call_enumerator(
         self,
     ) -> node.MacroDirectiveEnumerator:
         directive = self._parse_preprocess_call()
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return node.MacroDirectiveEnumerator(directive.code_range, directive)
 
     def _consume_tree_sitter_enumerator_list(
@@ -967,7 +1060,7 @@ class TreeSitterCParser(CParserInterface):
     ) -> Sequence[node.EnumeratorBase]:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/master/src/grammar.json#L5137-L5245
         assert self._is_tree_sitter_enumerator_list()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
         self._consume_left_brace()
 
         list_ = []
@@ -997,16 +1090,15 @@ class TreeSitterCParser(CParserInterface):
                 self._consume_comma()
 
         self._consume_right_brace()
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return list_
 
     def _consume_c_enum_specifier(
         self,
     ) -> node.EnumSpecifier:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5049-L5136
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_enum_keyword()
 
@@ -1026,8 +1118,7 @@ class TreeSitterCParser(CParserInterface):
                 "missing both enum name and enumerator list",
             )
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.EnumSpecifier(code_range, id_, enumerator_list)
 
     def _consume_c_type_specifier_qualifier_list(
@@ -1094,6 +1185,12 @@ class TreeSitterCParser(CParserInterface):
     def _is_tree_sitter_ms_based_modifier(self) -> bool:
         return self._is_node_type(node_type="ms_based_modifier")
 
+    def _raise_if_ms_based_modifier(self) -> None:
+        if self._is_tree_sitter_ms_based_modifier():
+            raise self._create_code_error(
+                err_msg="MSCV based modifier is not supported",
+            )
+
     def _is_tree_sitter_ms_pointer_modifier(self) -> bool:
         return self._is_node_type(node_type="ms_pointer_modifier")
 
@@ -1104,9 +1201,9 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.AbstractPointerDeclarator:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L4007-L4053
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         child_count = self._get_child_count()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         self._consume_c_pointer_token()
         if self._is_tree_sitter_ms_pointer_modifier():
@@ -1116,8 +1213,7 @@ class TreeSitterCParser(CParserInterface):
         qualifiers = self._consume_c_type_qualifier_list(child_count - 1)
         declarator = self._try_consume_c_abstract_declarator()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.AbstractPointerDeclarator(
             code_range,
             qualifiers if qualifiers else None,
@@ -1138,47 +1234,279 @@ class TreeSitterCParser(CParserInterface):
     def _is_c_attribute(self) -> bool:
         return self._is_node_type(node_type="attribute_specifier")
 
-    def _is_c_expression(self) -> bool:
+    def _is_tree_sitter_binary_expression(self) -> bool:
+        return self._is_node_type(node_type="binary_expression")
+
+    def _consume_tree_sitter_binary_expression(self):
+        # For `binary_expression`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L6960-L7558
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        lhs = self._consume_tree_sitter_expression()
+        op = self._consume_tree_sitter_binary_operator()
+        rhs = self._consume_tree_sitter_expression()
+
+        self._goto_parent_then_next_sibling()
+        return node.BinaryExpression(code_range, op, lhs, rhs)
+
+    def _is_tree_sitter_conditional_expression(self) -> bool:
+        return self._is_node_type(node_type="conditional_expression")
+
+    def _consume_tree_sitter_conditional_expression(self):
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L6719-L6776
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        condition = self._consume_tree_sitter_expression()
+        self._consume_question_mark()
+        if self._is_tree_sitter_comma_expression():
+            first = self._consume_tree_sitter_comma_expression()
+        else:
+            first = self._consume_tree_sitter_expression()
+        self._consume_colon()
+        second = self._consume_tree_sitter_expression()
+
+        self._goto_parent_then_next_sibling()
+        return node.ConditionalExpression(
+            code_range, condition, first, second,
+        )
+
+    def _is_tree_sitter_comma_expression(self) -> bool:
+        return self._is_node_type(node_type="comma_expression")
+
+    def _consume_tree_sitter_comma_expression_as_list(
+        self,
+    ) -> Sequence[node.ExpressionBase]:
+        assert self._is_tree_sitter_comma_expression()
+
+        list_: List[node.ExpressionBase] = []
+        list_.append(self._consume_tree_sitter_expression())
+        self._consume_comma()
+        if self._is_tree_sitter_comma_expression():
+            list_.extend(self._consume_tree_sitter_comma_expression_as_list())
+        else:
+            list_.append(self._consume_tree_sitter_expression())
+        return list_
+
+    def _is_tree_sitter_assignment_expression(self) -> bool:
+        return self._is_node_type(node_type="assignment_expression")
+
+    def _is_tree_sitter_call_expression(self) -> bool:
+        return self._is_node_type(node_type="call_expression")
+
+    def _consume_tree_sitter_call_expression(self) -> node.CallExpression:
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        assert self._is_tree_sitter_expression()
+        callee = self._consume_tree_sitter_expression()
+        arguments = self._consume_tree_sitter_argument_list()
+
+        self._goto_parent_then_next_sibling()
+        return node.CallExpression(
+            code_range, callee, arguments if arguments else None,
+        )
+
+    def _is_tree_sitter_field_expression(self) -> bool:
+        return self._is_node_type(node_type="field_expression")
+
+    def _is_tree_sitter_field_identifier(self) -> bool:
+        return self._is_node_type(node_type="field_identifier")
+
+    def _consume_tree_sitter_field_identifier(self) -> node.Identifier:
+        assert self._is_tree_sitter_field_identifier()
+        self._goto_first_child()
+        id_ = self._consume_c_identifier()
+        self._goto_parent_then_next_sibling()
+        return id_
+
+    def _consume_tree_sitter_field_expression(self) -> node.MemberExpression:
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/node-types.json#L1657-L1695
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        exp = self._consume_tree_sitter_expression()
+        field = self._consume_tree_sitter_field_identifier()
+        if self._is_c_indirect_access_operator():
+            kind = node.MemberExpressionKind.Indirect
+        elif self._is_period_sign():
+            kind = node.MemberExpressionKind.Direct
+        else:
+            unreachable()
+
+        self._goto_parent_then_next_sibling()
+        return node.MemberExpression(code_range, kind, exp, field)
+
+    def _is_c_pointer_expression(self) -> bool:
+        return self._is_node_type(node_type="pointer_expression")
+
+    def _consume_c_pointer_expression(self) -> node.UnaryExpression:
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        exp = self._consume_tree_sitter_expression()
+        if self._is_ampersand():
+            op = node.UnaryOperator.Address
+        elif self._is_star_sign():
+            op = node.UnaryOperator.Deference
+        else:
+            unreachable()
+
+        self._goto_parent_then_next_sibling()
+        return node.UnaryExpression(code_range, op, exp)
+
+    def _is_tree_sitter_subscript_expression(self) -> bool:
+        return self._is_node_type(node_type="subscript_expression")
+
+    def _consume_tree_sitter_subscript_expression(
+        self,
+    ) -> node.SubscriptExpression:
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/node-types.json#L3547-L3571
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        object_ = self._consume_tree_sitter_expression()
+        subscript = self._consume_tree_sitter_expression()
+
+        self._goto_parent_then_next_sibling()
+        return node.SubscriptExpression(code_range, object_, subscript)
+
+    def _is_tree_sitter_parenthesized_expression(self) -> bool:
+        return self._is_node_type(node_type="parenthesized_expression")
+
+    def _consume_tree_sitter_parenthesized_expression(self) -> ExpressionBase:
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8608-L8637
+        self._goto_first_child()
+
+        self._consume_left_parenthesis()
+        if self._is_tree_sitter_expression():
+            exp = self._consume_tree_sitter_expression()
+        elif self._is_tree_sitter_comma_expression():
+            exp = self._consume_tree_sitter_comma_expression()
+        elif self._is_tree_sitter_compound_statement():
+            # GCC supports using a compound statement as an expression if the
+            # statement is wrapped inside an pair of parentheses. For example,
+            #
+            # ({ int y = foo (); int z;
+            #    if (y > 0) z = y;
+            #    else z = - y;
+            #    z; })
+            #
+            # See https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
+            statement = self._consume_tree_sitter_compound_statement()
+            exp = node.StatementExpression(statement.code_range, statement)
+        else:
+            raise self._create_code_error(
+                "unsupported parenthesized expression",
+            )
+        self._consume_right_parenthesis()
+
+        self._goto_parent_then_next_sibling()
+        return exp
+
+    def _is_tree_sitter_assignment_target(self) -> bool:
+        return (
+            self._is_tree_sitter_identifier() or
+            self._is_tree_sitter_call_expression() or
+            self._is_tree_sitter_field_expression() or
+            self._is_c_pointer_expression() or
+            self._is_tree_sitter_subscript_expression() or
+            self._is_tree_sitter_parenthesized_expression()
+        )
+
+    def _consume_tree_sitter_assignment_target(self) -> node.ExpressionBase:
+        if self._is_tree_sitter_identifier():
+            return self._consume_c_identifier_expression()
+        elif self._is_tree_sitter_call_expression():
+            return self._consume_tree_sitter_call_expression()
+        elif self._is_tree_sitter_field_expression():
+            return self._consume_tree_sitter_field_expression()
+        elif self._is_c_pointer_expression():
+            return self._consume_c_pointer_expression()
+        elif self._is_tree_sitter_subscript_expression():
+            return self._consume_tree_sitter_subscript_expression()
+        elif self._is_tree_sitter_parenthesized_expression():
+            return self._consume_tree_sitter_parenthesized_expression()
+        else:
+            raise self._create_code_error("unsupported assignment target")
+
+    def _is_tree_sitter_assignment_operator(self) -> bool:
+        for op in node.AssignmentOperator:
+            if self._is_node_type(op.value):
+                return True
+        return False
+
+    def _consume_tree_sitter_assignment_operator(
+        self,
+    ) -> node.AssignmentOperator:
+        assert self._is_tree_sitter_assignment_operator()
+        op = node.AssignmentOperator(self._consume_raw_content())
+        return op
+
+    def _consume_tree_sitter_assignment_expression(
+        self,
+    ) -> node.AssignmentExpression:
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L6806-L6883
+        code_range = self._get_code_range()
+        self._goto_first_child()
+
+        lhs = self._consume_tree_sitter_assignment_target()
+        assign_op = self._consume_tree_sitter_assignment_operator()
+        rhs = self._consume_tree_sitter_expression()
+
+        self._goto_parent_then_next_sibling()
+        return node.AssignmentExpression(code_range, assign_op, lhs, rhs)
+
+    def _consume_tree_sitter_comma_expression(self) -> node.CommaExpression:
+        # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L6685-L6718
+        code_range = self._get_code_range()
+        expressions = self._consume_tree_sitter_comma_expression_as_list()
+        return node.CommaExpression(code_range, expressions)
+
+    def _is_tree_sitter_expression(self) -> bool:
+        # For `_expression_not_binary`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L6960-L7558
+        # For `binary_expression`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L6960-L7558
+        return (
+            self._is_tree_sitter_binary_expression() or
+            self._is_tree_sitter_conditional_expression()
+        )
+
+    def _consume_tree_sitter_expression(self) -> node.ExpressionBase:
         raise NotImplementedError()
 
-    def _consume_c_expression(self) -> node.ExpressionBase:
-        raise NotImplementedError()
-
-    def _is_c_argument_list(self) -> bool:
+    def _is_tree_sitter_argument_list(self) -> bool:
         return self._is_node_type(node_type="argument_list")
 
-    def _consume_c_argument_list(
+    def _consume_tree_sitter_argument_list(
         self
     ) -> Sequence[node.ExpressionBase]:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8468C6-L8531
-        self._assert_current_node_type(node_type="argument_list")
-        self._cursor.goto_first_child()
+        assert self._is_tree_sitter_argument_list()
+        self._goto_first_child()
 
         list_ = []
         self._consume_left_parenthesis()
         if not self._is_right_parenthesis():
-            list_.append(self._consume_c_expression())
+            list_.append(self._consume_tree_sitter_expression())
         while not self._is_right_parenthesis():
             self._consume_comma()
-            list_.append(self._consume_c_expression())
+            list_.append(self._consume_tree_sitter_expression())
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return list_
 
     def _consume_c_attribute(self) -> node.Attribute:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L3193-L3222
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="__attribute__")
         self._consume_left_parenthesis()
-        arguments = self._consume_c_argument_list()
+        arguments = self._consume_tree_sitter_argument_list()
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.Attribute(code_range, arguments)
 
     def _try_consume_c_attribute_list(
@@ -1195,8 +1523,8 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_c_parameter_declaration(self) -> node.ParameterDeclaration:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5771-L5811
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
         sibling_count = self._get_sibling_count()
 
         specifiers = self._consume_c_declaration_specifiers(sibling_count)
@@ -1210,8 +1538,7 @@ class TreeSitterCParser(CParserInterface):
             sibling_count - len(specifiers) - 1 if declarator else 0,
         )
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.ParameterDeclaration(
             code_range, specifiers, declarator, attributes,
         )
@@ -1221,7 +1548,7 @@ class TreeSitterCParser(CParserInterface):
     ) -> Tuple[Sequence[node.ParameterDeclaration], bool]:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L5634-L5706
         self._assert_current_node_type(node_type="parameter_list")
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         list_ = []
         variadic = False
@@ -1238,22 +1565,20 @@ class TreeSitterCParser(CParserInterface):
                 variadic = True
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return list_, variadic
 
     def _consume_c_abstract_function_declarator(
         self,
     ) -> node.AbstractFunctionDeclarator:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L4210-L4242
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         declarator = self._try_consume_c_abstract_declarator()
         parameter_type_list, variadic = self._consume_c_parameter_type_list()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.AbstractFunctionDeclarator(
             code_range, declarator, parameter_type_list, variadic,
         )
@@ -1267,12 +1592,12 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.AbstractArrayDeclarator:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L4467-L4540
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
         sibling_count = self._get_sibling_count()
 
         declarator = self._try_consume_c_abstract_declarator()
-        array_size_start = self._get_current_code_start()
+        array_size_start = self._get_code_start()
         self._consume_left_bracket()
 
         expression = None
@@ -1285,35 +1610,34 @@ class TreeSitterCParser(CParserInterface):
             self._consume_static_keyword()
             if self._is_c_type_qualifier():
                 qualifiers = self._consume_c_type_qualifier_list(sibling_count)
-            expression = self._consume_c_expression()
+            expression = self._consume_tree_sitter_expression()
         elif self._is_c_type_qualifier():
             qualifiers = self._consume_c_type_qualifier_list(sibling_count)
             if self._is_static_keyword():
                 size_kind = node.ArraySizeKind.StaticExpression
                 self._consume_static_keyword()
-                expression = self._consume_c_expression()
-            elif self._is_c_expression():
+                expression = self._consume_tree_sitter_expression()
+            elif self._is_tree_sitter_expression():
                 size_kind = node.ArraySizeKind.VariableExpression
-                expression = self._consume_c_expression()
+                expression = self._consume_tree_sitter_expression()
             else:
                 size_kind = node.ArraySizeKind.Unknown
                 assert self._is_right_bracket()
-        elif self._is_c_expression():
+        elif self._is_tree_sitter_expression():
             size_kind = node.ArraySizeKind.VariableExpression
-            expression = self._consume_c_expression()
+            expression = self._consume_tree_sitter_expression()
         else:
             size_kind = node.ArraySizeKind.Unknown
             assert self._is_right_bracket()
 
-        array_size_end = self._get_current_code_end()
+        array_size_end = self._get_code_end()
         self._consume_right_bracket()
         array_size = node.ArraySize(
             CodeRange(self._source_file, array_size_start, array_size_end),
             size_kind, qualifiers, expression,
         )
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.AbstractArrayDeclarator(code_range, declarator, array_size)
 
     def _is_c_abstract_parenthesized_declarator(self) -> bool:
@@ -1321,10 +1645,11 @@ class TreeSitterCParser(CParserInterface):
             TreeSitterAbstractDeclaratorType.ParenthesizedDeclarator.value,
         )
 
-    def _consume_c_abstract_parenthesized_declarator(self):
+    def _consume_c_abstract_parenthesized_declarator(
+        self,
+    ) -> node.AbstractDeclaratorBase:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L3761-L3793
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         self._consume_left_parenthesis()
         if self._is_tree_sitter_ms_call_modifier():
@@ -1332,9 +1657,8 @@ class TreeSitterCParser(CParserInterface):
         declarator = self._consume_c_abstract_declarator()
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
-        return node.AbstractParenthesizedDeclarator(code_range, declarator)
+        self._goto_parent_then_next_sibling()
+        return declarator
 
     def _consume_c_abstract_declarator(self) -> node.AbstractDeclaratorBase:
         if self._is_c_abstract_pointer_declarator():
@@ -1357,31 +1681,29 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_c_type_name(self) -> node.TypeName:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L7661-L7703
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         child_count = self._get_child_count()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         list_ = self._consume_c_type_specifier_qualifier_list(child_count)
         declarator = self._try_consume_c_abstract_declarator()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.TypeName(code_range, list_, declarator)
 
     def _consume_tree_sitter_macro_type_specifier(
         self
     ) -> node.MacroTypeSpecifier:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L9565-L9597
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         identifier = self._consume_c_identifier()
         self._consume_left_parenthesis()
         type_name = self._consume_c_type_name()
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MacroTypeSpecifier(code_range, identifier, type_name)
 
     def _is_tree_sitter_sized_type_item(self) -> bool:
@@ -1396,11 +1718,11 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.PrimitiveTypeSpecifier:
         assert self._cursor.node is not None
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
 
         kind = node.PrimitiveTypeSpecifierKind(self._cursor.node.type)
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return node.PrimitiveTypeSpecifier(code_range, kind)
 
     def _consume_tree_sitter_sized_type_specifier(
@@ -1410,7 +1732,7 @@ class TreeSitterCParser(CParserInterface):
         count = self._get_child_count()
         specifiers: List[node.TypeSpecifier | node.TypeQualifier] = []
         index = 0
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         while index < count and self._is_tree_sitter_sized_type_item():
             specifiers.append(self._consume_tree_sitter_size_type_item())
@@ -1431,38 +1753,37 @@ class TreeSitterCParser(CParserInterface):
             specifiers.append(self._consume_tree_sitter_size_type_item())
             index += 1
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return specifiers
 
     def _consume_c_primitive_type_specifier(
         self,
     ) -> node.TypeSpecifier:
         assert self._is_c_primitive_type_specifier()
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         type_ = self._consume_raw_content()
 
-        if type_ == TreeSitterCPrimitivType.Char:
+        if type_ == TreeSitterCPrimitivType.Char.value:
             return node.PrimitiveTypeSpecifier(
                 code_range,
                 node.PrimitiveTypeSpecifierKind.Char,
             )
-        elif type_ == TreeSitterCPrimitivType.Int:
+        elif type_ == TreeSitterCPrimitivType.Int.value:
             return node.PrimitiveTypeSpecifier(
                 code_range,
                 node.PrimitiveTypeSpecifierKind.Int,
             )
-        elif type_ == TreeSitterCPrimitivType.Float:
+        elif type_ == TreeSitterCPrimitivType.Float.value:
             return node.PrimitiveTypeSpecifier(
                 code_range,
                 node.PrimitiveTypeSpecifierKind.Float,
             )
-        elif type_ == TreeSitterCPrimitivType.Double:
+        elif type_ == TreeSitterCPrimitivType.Double.value:
             return node.PrimitiveTypeSpecifier(
                 code_range,
                 node.PrimitiveTypeSpecifierKind.Double,
             )
-        elif type_ == TreeSitterCPrimitivType.Void:
+        elif type_ == TreeSitterCPrimitivType.Void.value:
             return node.PrimitiveTypeSpecifier(
                 code_range,
                 node.PrimitiveTypeSpecifierKind.Void,
@@ -1471,18 +1792,18 @@ class TreeSitterCParser(CParserInterface):
             return node.TypedefName(code_range, type_)
 
     def _consume_c_identifier(self) -> node.Identifier:
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         name = self._consume_tree_sitter_identifier()
         return node.Identifier(code_range, name)
 
     def _consume_c_identifier_expression(self) -> node.IdentifierExpression:
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         identifier = self._consume_c_identifier()
         return node.IdentifierExpression(code_range, identifier)
 
     def _consume_c_typedef_name(self) -> node.TypedefName:
         assert self._is_tree_sitter_type_identifier()
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         identifier = self._consume_raw_content()
         return node.TypedefName(code_range, identifier)
 
@@ -1509,7 +1830,7 @@ class TreeSitterCParser(CParserInterface):
             TreeSitterCDeclarationModifierType.StorageClassSpecifier.value,
             TreeSitterCDeclarationModifierType.TypeQualifier.value,
         ):
-            self._cursor.goto_first_child()
+            self._goto_first_child()
             res = self._is_node_type_in(
                 TreeSitterCStorageClassSpecifier.Inline.value,
                 TreeSitterCStorageClassSpecifier.MSVCInline.value,
@@ -1520,8 +1841,8 @@ class TreeSitterCParser(CParserInterface):
         return res
 
     def _consume_c_function_specifier(self) -> node.FunctionSpecifier:
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         if self._is_node_type_in(
             TreeSitterCStorageClassSpecifier.Inline.value,
@@ -1535,8 +1856,7 @@ class TreeSitterCParser(CParserInterface):
             )
             kind = node.FunctionSpecifierKind.Noreturn
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.FunctionSpecifier(code_range, kind)
 
     def _is_c_alignment_specifier(self) -> bool:
@@ -1545,14 +1865,14 @@ class TreeSitterCParser(CParserInterface):
         )
 
     def _consume_c_alignment_specifier(self) -> node.AlignmentSpecifierBase:
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._assert_current_node_type_in("alignas", "_Alignas")
         self._consume_left_parenthesis()
-        if self._is_c_expression():
+        if self._is_tree_sitter_expression():
             align_specifier = node.AlignmentConstExpressionSpecifier(
-                code_range, self._consume_c_expression(),
+                code_range, self._consume_tree_sitter_expression(),
             )
         else:
             align_specifier = node.AlignmentTypeSpecifier(
@@ -1560,8 +1880,7 @@ class TreeSitterCParser(CParserInterface):
             )
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return align_specifier
 
     def _is_c_declaration_specifier(self) -> bool:
@@ -1631,7 +1950,7 @@ class TreeSitterCParser(CParserInterface):
             self._is_tree_sitter_function_declarator() or
             self._is_tree_sitter_array_declarator() or
             self._is_tree_sitter_parenthesized_declarator() or
-            self._is_identifier()
+            self._is_tree_sitter_identifier()
         )
 
     def _consume_identifier_as_declarator(self) -> node.IdentifierDeclarator:
@@ -1646,13 +1965,13 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_tree_sitter_initializer_list(self) -> node.InitializerList:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8638-L8721
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_left_brace()
         items: List[node.InitializerListItem] = []
         while not self._is_right_brace():
-            if self._is_c_expression():
+            if self._is_tree_sitter_expression():
                 items.append(self._consume_c_expression_as_initializer_item())
             elif self._is_tree_sitter_initializer_list():
                 items.append(self._consume_init_list_as_initializer_item())
@@ -1663,8 +1982,7 @@ class TreeSitterCParser(CParserInterface):
                 self._consume_comma()
         self._consume_right_brace()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.InitializerList(code_range, items)
 
     def _is_tree_sitter_subscript_designator(self) -> bool:
@@ -1672,38 +1990,28 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_tree_sitter_subscript_designator(self) -> node.IndexDesignator:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8811-L8827
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_left_bracket()
-        exp = self._consume_c_expression()
+        exp = self._consume_tree_sitter_expression()
         self._consume_right_bracket()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.IndexDesignator(code_range, exp)
 
     def _is_tree_sitter_field_designator(self) -> bool:
         return self._is_node_type(node_type="field_designator")
 
-    def _consume_tree_sitter_field_identifier(self) -> node.Identifier:
-        self._assert_current_node_type(node_type="field_identifier")
-        code_range = self._get_current_code_range()
-
-        field = self._consume_raw_content()
-        self._cursor.goto_next_sibling()
-        return node.Identifier(code_range, field)
-
     def _consume_tree_sitter_field_designator(self) -> node.MemberDesignator:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8861-L8873
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type=".")
         member = self._consume_tree_sitter_field_identifier()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.MemberDesignator(code_range, member)
 
     def _is_tree_sitter_subscript_range_designator(self) -> bool:
@@ -1713,25 +2021,24 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.RangeDesignator:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8828-L8860
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_left_bracket()
-        start = self._consume_c_expression()
+        start = self._consume_tree_sitter_expression()
         self._consume_node_with_type(node_type="...")
-        end = self._consume_c_expression()
+        end = self._consume_tree_sitter_expression()
         self._consume_right_bracket()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.RangeDesignator(code_range, start, end)
 
     def _consume_init_pair_as_initializer_item(
         self,
     ) -> node.InitializerListItem:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L8722-L8810
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         designators: List[node.DesignatorBase] = []
         while not self._is_equal_sign():
@@ -1750,15 +2057,14 @@ class TreeSitterCParser(CParserInterface):
                     "unsupported initialization designator",
                 )
 
-        if self._is_c_expression():
+        if self._is_tree_sitter_expression():
             init = self._consume_c_expression_as_initializer()
         elif self._is_tree_sitter_initializer_list():
             init = self._consume_tree_sitter_initializer_list()
         else:
             unreachable()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.InitializerListItem(code_range, designators, init)
 
     def _consume_init_list_as_initializer_item(
@@ -1780,23 +2086,22 @@ class TreeSitterCParser(CParserInterface):
     def _consume_c_expression_as_initializer(
         self,
     ) -> node.ExpressionInitializer:
-        expression = self._consume_c_expression()
+        expression = self._consume_tree_sitter_expression()
         return node.ExpressionInitializer(expression.code_range, expression)
 
     def _consume_tree_sitter_init_declarator(self) -> node.InitDeclarator:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L4541-L4574
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         declarator = self._consume_tree_sitter_declarator()
         self._consume_equal_sign()
-        if self._is_c_expression():
+        if self._is_tree_sitter_expression():
             init = self._consume_c_expression_as_initializer()
         else:
             init = self._consume_tree_sitter_initializer_list()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.InitDeclarator(code_range, declarator, init)
 
     def _consume_tree_sitter_attributed_declarator(self) -> node.DeclaratorBase:
@@ -1806,14 +2111,11 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_tree_sitter_pointer_declarator(self) -> node.PointerDeclarator:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L3854-L3904
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         child_count = self._get_child_count()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
-        if self._is_tree_sitter_ms_based_modifier():
-            raise self._create_code_error(
-                err_msg="MSCV based modifier is not supported",
-            )
+        self._raise_if_ms_based_modifier()
         self._consume_c_pointer_token()
         if self._is_tree_sitter_ms_pointer_modifier():
             raise self._create_code_error(
@@ -1822,8 +2124,7 @@ class TreeSitterCParser(CParserInterface):
         qualifiers = self._consume_c_type_qualifier_list(child_count - 1)
         declarator = self._consume_tree_sitter_declarator()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.PointerDeclarator(
             code_range,
             qualifiers if qualifiers else None,
@@ -1834,26 +2135,25 @@ class TreeSitterCParser(CParserInterface):
         self,
     ) -> node.FunctionDeclarator:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L4054-L4115
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         declarator = self._consume_tree_sitter_declarator()
         parameter_type_list, variadic = self._consume_c_parameter_type_list()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.FunctionDeclarator(
             code_range, declarator, parameter_type_list, variadic,
         )
 
     def _consume_tree_sitter_array_declarator(self) -> node.ArrayDeclarator:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L4269-L4334
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
         sibling_count = self._get_sibling_count()
 
         declarator = self._consume_tree_sitter_declarator()
-        array_size_start = self._get_current_code_start()
+        array_size_start = self._get_code_start()
         self._consume_left_bracket()
 
         expression = None
@@ -1866,42 +2166,40 @@ class TreeSitterCParser(CParserInterface):
             self._consume_static_keyword()
             if self._is_c_type_qualifier():
                 qualifiers = self._consume_c_type_qualifier_list(sibling_count)
-            expression = self._consume_c_expression()
+            expression = self._consume_tree_sitter_expression()
         elif self._is_c_type_qualifier():
             qualifiers = self._consume_c_type_qualifier_list(sibling_count)
             if self._is_static_keyword():
                 size_kind = node.ArraySizeKind.StaticExpression
                 self._consume_static_keyword()
-                expression = self._consume_c_expression()
-            elif self._is_c_expression():
+                expression = self._consume_tree_sitter_expression()
+            elif self._is_tree_sitter_expression():
                 size_kind = node.ArraySizeKind.VariableExpression
-                expression = self._consume_c_expression()
+                expression = self._consume_tree_sitter_expression()
             else:
                 size_kind = node.ArraySizeKind.Unknown
                 assert self._is_right_bracket()
-        elif self._is_c_expression():
+        elif self._is_tree_sitter_expression():
             size_kind = node.ArraySizeKind.VariableExpression
-            expression = self._consume_c_expression()
+            expression = self._consume_tree_sitter_expression()
         else:
             size_kind = node.ArraySizeKind.Unknown
             assert self._is_right_bracket()
 
-        array_size_end = self._get_current_code_end()
+        array_size_end = self._get_code_end()
         self._consume_right_bracket()
         array_size = node.ArraySize(
             CodeRange(self._source_file, array_size_start, array_size_end),
             size_kind, qualifiers, expression,
         )
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.ArrayDeclarator(code_range, declarator, array_size)
 
     def _consume_tree_sitter_parenthesized_declarator(
         self,
-    ) -> node.ParenthesizedDeclarator:
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+    ) -> node.DeclaratorBase:
+        self._goto_first_child()
 
         self._consume_left_parenthesis()
         if self._is_tree_sitter_ms_call_modifier():
@@ -1909,12 +2207,11 @@ class TreeSitterCParser(CParserInterface):
         declarator = self._consume_tree_sitter_declarator()
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
-        return node.ParenthesizedDeclarator(code_range, declarator)
+        self._goto_parent_then_next_sibling()
+        return declarator
 
     def _consume_tree_sitter_declarator(self) -> node.DeclaratorBase:
-        if self._is_identifier():
+        if self._is_tree_sitter_identifier():
             return self._consume_identifier_as_declarator()
         elif self._is_tree_sitter_init_declarator():
             return self._consume_tree_sitter_init_declarator()
@@ -1926,14 +2223,21 @@ class TreeSitterCParser(CParserInterface):
             return self._consume_tree_sitter_array_declarator()
         elif self._is_tree_sitter_parenthesized_declarator():
             return self._consume_tree_sitter_parenthesized_declarator()
+        elif self._is_tree_sitter_function_declarator():
+            return self._consume_tree_sitter_function_declarator()
         else:
             raise self._create_code_error("unsupported declarator")
 
-    def _parse_c_declaration(self) -> node.Declaration:
+    def _consume_c_declaration(self) -> node.DeclarationBase:
+        declaration = self._parse_c_declaration()
+        self._goto_next_sibling()
+        return declaration
+
+    def _parse_c_declaration(self) -> node.ConcreteDeclaration:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L2877-L2998
         assert self._is_c_declaration()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
         sibling_count = self._get_sibling_count()
 
         decl_specifiers = self._consume_c_declaration_specifiers(sibling_count)
@@ -1943,7 +2247,7 @@ class TreeSitterCParser(CParserInterface):
         self._consume_semicolon()
 
         self._cursor.goto_parent()
-        return node.Declaration(
+        return node.ConcreteDeclaration(
             code_range, decl_specifiers, declarators if declarators else None,
         )
 
@@ -1957,7 +2261,7 @@ class TreeSitterCParser(CParserInterface):
 
         return False
 
-    def _parse_top_level_preprocess_directive(self) -> node.PreprocessNode:
+    def _parse_top_level_preprocess_directive(self) -> node.PreprocessNodeBase:
         assert self._is_top_level_preprocess_directive()
 
         if self._is_preprocess_include():
@@ -1978,7 +2282,7 @@ class TreeSitterCParser(CParserInterface):
             raise self._create_code_error(
                 f"expect node with type {node_type}",
             )
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
 
     def _is_comma(self) -> bool:
         return self._is_node_type(node_type=",")
@@ -1991,24 +2295,24 @@ class TreeSitterCParser(CParserInterface):
         if raw_content is None:
             raise self._create_code_error("empty code region")
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return raw_content
 
     def _parse_raw_content(self) -> Optional[str]:
         return TreeSitterHelper.parse_raw_content(self._cursor)
 
-    def _is_identifier(self) -> bool:
+    def _is_tree_sitter_identifier(self) -> bool:
         return self._is_node_type(node_type="identifier")
 
     def _consume_tree_sitter_identifier(self) -> str:
-        if not self._is_identifier():
+        if not self._is_tree_sitter_identifier():
             raise self._create_code_error("not an identifier node")
 
         identifier = TreeSitterHelper.parse_raw_content(self._cursor)
         if identifier is None:
             raise self._create_code_error("an empty identifier")
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return identifier
 
     def _get_current_node_type(self) -> str:
@@ -2023,13 +2327,13 @@ class TreeSitterCParser(CParserInterface):
     def _parse_preprocess_include(self) -> node.IncludeDirective:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L145-L186
         assert self._is_preprocess_include()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#include")
         self._assert_current_node_type_in(
             *(t.value for t in node.IncludeTargetType),
         )
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         target_type = node.IncludeTargetType(self._get_current_node_type())
         include_directive: node.IncludeDirective
         if target_type == node.IncludeTargetType.CallExpression:
@@ -2054,15 +2358,15 @@ class TreeSitterCParser(CParserInterface):
     def _consume_preprocess_call_expression(
         self,
     ) -> node.PreprocessCallExpression:
+        # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L2104-L2133
         assert self._is_preprocess_call_expression()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         callee = self._consume_tree_sitter_identifier()
         arguments = self._consume_preprocess_argument_list()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.PreprocessCallExpression(code_range, callee, arguments)
 
     def _is_node_type(self, node_type: str) -> bool:
@@ -2070,6 +2374,24 @@ class TreeSitterCParser(CParserInterface):
 
     def _is_node_type_in(self, *node_types: str) -> bool:
         return TreeSitterHelper.is_node_type_in(self._cursor, *node_types)
+
+    def _is_ampersand(self) -> bool:
+        return self._is_node_type(node_type="&")
+
+    def _consume_ampersand(self) -> None:
+        self._consume_node_with_type(node_type="&")
+
+    def _is_period_sign(self) -> bool:
+        return self._is_node_type(node_type=".")
+
+    def _consume_period_sign(self) -> None:
+        self._consume_node_with_type(node_type=".")
+
+    def _is_c_indirect_access_operator(self) -> bool:
+        return self._is_node_type(node_type="->")
+
+    def _consume_c_indirect_access_operator(self) -> None:
+        self._consume_node_with_type(node_type="->")
 
     def _is_left_parenthesis(self) -> bool:
         return self._is_node_type(node_type="(")
@@ -2131,21 +2453,28 @@ class TreeSitterCParser(CParserInterface):
     def _consume_new_line(self) -> None:
         self._consume_node_with_type(node_type="\n")
 
+    def _is_question_mark(self) -> bool:
+        return self._is_node_type(node_type="?")
+
+    def _consume_question_mark(self) -> None:
+        self._consume_node_with_type(node_type="?")
+
     def _consume_preprocess_argument_list(
         self,
     ) -> Sequence[node.PreprocessExpression]:
         self._assert_current_node_type(node_type="argument_list")
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         arguments: List[node.PreprocessExpression] = []
+        self._consume_left_parenthesis()
         if not self._is_end_of_argument_list():
             arguments.append(self._consume_preprocess_expression())
         while not self._is_end_of_argument_list():
             self._consume_comma()
             arguments.append(self._consume_preprocess_expression())
+        self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return arguments
 
     def _is_preprocess_primitive_expression(self) -> bool:
@@ -2154,7 +2483,7 @@ class TreeSitterCParser(CParserInterface):
         )
 
     def _is_preprocess_call_expression(self) -> bool:
-        return self._is_node_type(node_type="preproc_call_expression")
+        return self._is_node_type(node.IncludeTargetType.CallExpression.value)
 
     def _consume_preprocess_expression(self) -> node.PreprocessExpression:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L1945-L2001
@@ -2175,9 +2504,9 @@ class TreeSitterCParser(CParserInterface):
 
     def _consume_preprocess_primitive(self) -> node.PreprocessPrimitive:
         assert self._is_preprocess_primitive_expression()
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
 
-        if self._is_identifier():
+        if self._is_tree_sitter_identifier():
             identifier = self._consume_tree_sitter_identifier()
             return node.PreprocessPrimitive(
                 code_range, node.PreprocessPrimitiveType.Identifier,
@@ -2206,17 +2535,17 @@ class TreeSitterCParser(CParserInterface):
         # See https://gcc.gnu.org/onlinedocs/cpp/Defined.html
         assert self._is_preprocess_defined_call()
 
-        start = self._get_current_code_start()
+        start = self._get_code_start()
         end: CodeLocation
         identifier: str
         self._consume_node_with_type(node_type="#defined")
         if self._is_left_parenthesis():
             self._consume_left_parenthesis()
             identifier = self._consume_tree_sitter_identifier()
-            end = self._get_current_code_end()
+            end = self._get_code_end()
             self._consume_right_parenthesis()
         else:
-            end = self._get_current_code_end()
+            end = self._get_code_end()
             identifier = self._consume_tree_sitter_identifier()
         return node.PreprocessDefined(
             CodeRange(self._source_file, start, end), identifier,
@@ -2235,7 +2564,7 @@ class TreeSitterCParser(CParserInterface):
         assert self._cursor.node is not None
         op = node.PreprocessUnaryOperator(self._cursor.node.type)
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return op
 
     def _consume_preprocess_unary_expression(
@@ -2243,30 +2572,29 @@ class TreeSitterCParser(CParserInterface):
     ) -> node.PreprocessUnaryExpression:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L2062-L2103
         assert self._is_preprocess_unary_expression()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         operator = self._consume_preprocess_unary_operator()
         operand = self._consume_preprocess_expression()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.PreprocessUnaryExpression(code_range, operator, operand)
 
     def _is_preprocess_binary_expression(self) -> bool:
         return self._is_node_type(node_type="preproc_binary_expression")
 
-    def _consume_preprocess_binary_operator(
+    def _consume_tree_sitter_binary_operator(
         self,
-    ) -> node.PreprocessBinaryOperator:
+    ) -> node.BinaryOperator:
         self._assert_current_node_type_in(
-            *(op.value for op in node.PreprocessBinaryOperator),
+            *(op.value for op in node.BinaryOperator),
         )
 
         assert self._cursor.node is not None
-        op = node.PreprocessBinaryOperator(self._cursor.node.type)
+        op = node.BinaryOperator(self._cursor.node.type)
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return op
 
     def _consume_preprocess_binary_expression(
@@ -2274,15 +2602,14 @@ class TreeSitterCParser(CParserInterface):
     ) -> node.PreprocessBinaryExpression:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L2180-L2778
         assert self._is_preprocess_binary_expression()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         lhs = self._consume_preprocess_expression()
-        operator = self._consume_preprocess_binary_operator()
+        operator = self._consume_tree_sitter_binary_operator()
         rhs = self._consume_preprocess_expression()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.PreprocessBinaryExpression(code_range, operator, lhs, rhs)
 
     def _is_preprocess_parenthesized_expression(self) -> bool:
@@ -2293,15 +2620,14 @@ class TreeSitterCParser(CParserInterface):
     ) -> node.ParenthesizedPreprocessExpression:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L2002-L2018
         assert self._is_preprocess_parenthesized_expression()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_left_parenthesis()
         exp = self._consume_preprocess_expression()
         self._consume_right_parenthesis()
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.ParenthesizedPreprocessExpression(code_range, exp)
 
     def _is_preprocess_call(self) -> bool:
@@ -2325,17 +2651,17 @@ class TreeSitterCParser(CParserInterface):
         else:
             return None
 
-    def _parse_preprocess_call(self) -> node.PreprocessNode:
+    def _parse_preprocess_call(self) -> node.PreprocessNodeBase:
         assert self._is_preprocess_call()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
-        start = self._get_current_code_start()
+        start = self._get_code_start()
         assert self._is_preprocess_directive()
         directive = self._consume_raw_content()
         directive_arg = self._try_consume_preprocess_arg()
-        end = self._get_current_code_end()
+        end = self._get_code_end()
         code_range = CodeRange(self._source_file, start, end)
-        res: node.PreprocessNode
+        res: node.PreprocessNodeBase
         if self._is_preprocess_directive_eq(directive, target="undef"):
             # For `#undef` directives
             assert directive_arg is not None
@@ -2365,9 +2691,9 @@ class TreeSitterCParser(CParserInterface):
         # For `#if`, refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L397-L471
         # For `#ifdef` and `#ifndef`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L472-L556
         assert self._is_preprocess_if_section()
-        code_range = self._get_current_code_range()
+        code_range = self._get_code_range()
         is_if_directive = self._is_preprocess_if_directive()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         if_head_node = (
             self._consume_preprocess_if_directive_head() if is_if_directive
@@ -2382,7 +2708,7 @@ class TreeSitterCParser(CParserInterface):
         if self._is_preprocess_else():
             else_group = self._consume_preprocess_else()
 
-        endif_code_range = self._get_current_code_range()
+        endif_code_range = self._get_code_range()
         self._consume_node_with_type(node_type="#endif")
         endif = node.EndIfDirective(endif_code_range)
 
@@ -2398,8 +2724,10 @@ class TreeSitterCParser(CParserInterface):
     def _is_preprocess_if_directive(self) -> bool:
         return self._is_node_type(TreeSitterTopLevelPreprocessType.If.value)
 
-    def _try_consume_preprocess_group(self) -> Optional[Sequence[node.AstNode]]:
-        group: List[node.AstNode] = []
+    def _try_consume_preprocess_group(
+        self,
+    ) -> Optional[Sequence[node.TopLevelType]]:
+        group: List[node.TopLevelType] = []
 
         while True:
             ast_node = self._try_parse_top_level_ast_node()
@@ -2407,16 +2735,16 @@ class TreeSitterCParser(CParserInterface):
                 group.append(ast_node)
             if ast_node is None :
                 break
-            if not self._cursor.goto_next_sibling():
+            if not self._goto_next_sibling():
                 break
 
         return group if group else None
 
     def _consume_preprocess_if_directive_head(self) -> node.IfGroupDirective:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L397-L471
-        start = self._get_current_code_start()
+        start = self._get_code_start()
         self._consume_node_with_type(node_type="#if")
-        cond_end = self._get_current_code_end()
+        cond_end = self._get_code_end()
         condition = self._consume_preprocess_expression()
         self._consume_new_line()
         group = self._try_consume_preprocess_group()
@@ -2432,10 +2760,10 @@ class TreeSitterCParser(CParserInterface):
         self._assert_current_node_type_in("#ifdef", "#ifndef")
 
         is_ifdef = self._is_node_type(node_type="#ifdef")
-        start = self._get_current_code_start()
-        self._cursor.goto_next_sibling()
+        start = self._get_code_start()
+        self._goto_next_sibling()
 
-        id_end = self._get_current_code_end()
+        id_end = self._get_code_end()
         identifier = self._consume_tree_sitter_identifier()
         group = self._try_consume_preprocess_group()
         end = group[-1].code_range.end if group else id_end
@@ -2452,19 +2780,18 @@ class TreeSitterCParser(CParserInterface):
     def _consume_preprocess_elif(self) -> node.ElifDirective:
         # For the tree structure of `preproc_elif`, refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L582-L647
         assert self._is_preprocess_elif()
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
-        elif_start = self._get_current_code_start()
+        elif_start = self._get_code_start()
         self._consume_node_with_type(node_type="#elif")
 
-        cond_end = self._get_current_code_end()
+        cond_end = self._get_code_end()
         condition = self._consume_preprocess_expression()
         group = self._try_consume_preprocess_group()
 
         elif_end = group[-1].code_range.end if group else cond_end
 
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
+        self._goto_parent_then_next_sibling()
         return node.ElifDirective(
             CodeRange(self._source_file, elif_start, elif_end),
             group,
@@ -2477,19 +2804,13 @@ class TreeSitterCParser(CParserInterface):
     def _consume_preprocess_else(self) -> node.ElseDirective:
         # For the structure of `preproc_else`, see https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L557-L581
         assert self._is_preprocess_else()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
-
-        # start = CodeLocation.from_ts_node_start(cursor)
-        # else_end = CodeLocation.from_ts_node_end(cursor)
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#else")
         group = self._try_consume_preprocess_group()
 
-        # end = group[-1].code_range.end if group else else_end
-        self._cursor.goto_parent()
-        self._cursor.goto_next_sibling()
-        # return ElseDirective(CodeRange(file_name, start, end), group)
+        self._goto_parent_then_next_sibling()
         return node.ElseDirective(code_range, group)
 
     def _is_preprocess_define(self) -> bool:
@@ -2500,12 +2821,12 @@ class TreeSitterCParser(CParserInterface):
     def _parse_preprocess_define(self) -> node.DefineDirective:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L196-L240
         assert self._is_preprocess_define()
-        start = self._get_current_code_start()
-        self._cursor.goto_first_child()
+        start = self._get_code_start()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#define")
         identifier = self._consume_tree_sitter_identifier()
-        end = self._get_current_code_end()
+        end = self._get_code_end()
         replacement = self._try_consume_preprocess_arg()
 
         self._cursor.goto_parent()
@@ -2515,10 +2836,10 @@ class TreeSitterCParser(CParserInterface):
         )
 
     def _consume_preprocess_param(self) -> str:
-        if self._is_identifier():
+        if self._is_tree_sitter_identifier():
             return self._consume_tree_sitter_identifier()
         elif self._is_node_type(node_type="..."):
-            self._cursor.goto_next_sibling()
+            self._goto_next_sibling()
             return "..."
 
         raise self._create_code_error("not a preprocessing param")
@@ -2526,7 +2847,7 @@ class TreeSitterCParser(CParserInterface):
     def _consume_preprocess_params(self) -> Sequence[str]:
         # Refer to https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L294-L360
         self._assert_current_node_type(node_type="preproc_params")
-        self._cursor.goto_first_child()
+        self._goto_first_child()
 
         self._consume_left_parenthesis()
 
@@ -2546,7 +2867,7 @@ class TreeSitterCParser(CParserInterface):
                     "a function define directive",
                 )
 
-        self._cursor.goto_next_sibling()
+        self._goto_next_sibling()
         return params
 
     def _is_preprocess_function_define(self) -> bool:
@@ -2557,8 +2878,8 @@ class TreeSitterCParser(CParserInterface):
     def _parse_preprocess_function_define(self) -> node.FunctionDefineDirective:
         # See https://github.com/tree-sitter/tree-sitter-c/blob/ae19b676b13bdcc13b7665397e6d9b14975473dd/src/grammar.json#L241-L293
         assert self._is_preprocess_function_define()
-        code_range = self._get_current_code_range()
-        self._cursor.goto_first_child()
+        code_range = self._get_code_range()
+        self._goto_first_child()
 
         self._consume_node_with_type(node_type="#define")
         identifier = self._consume_tree_sitter_identifier()
@@ -2571,7 +2892,7 @@ class TreeSitterCParser(CParserInterface):
         )
 
 
-def _fix_function_definition(file_name: str, cursor: TreeCursor) -> Sequence[AstNode]:
+def _fix_function_definition(file_name: str, cursor: TreeCursor) -> Sequence[ExpressionBase]:
     """
     libc_hidden_def (INTERNAL (strtol))
 
